@@ -1,0 +1,363 @@
+package com.croods.vyaparerp.controller.salestarget;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.util.StreamUtils;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.croods.vyaparerp.config.ImageResize;
+import com.croods.vyaparerp.config.MenuPermission;
+import com.croods.vyaparerp.constant.Constant;
+import com.croods.vyaparerp.dto.api.salestarget.SalesTargetDataTableDto;
+import com.croods.vyaparerp.dto.salestarget.DataTableSalesTargetResponseDTO;
+import com.croods.vyaparerp.dto.salestarget.SalesTargetDTO;
+import com.croods.vyaparerp.dto.salestarget.TargetDto;
+import com.croods.vyaparerp.repository.salestarget.SalesTargetRepository;
+import com.croods.vyaparerp.service.salestarget.SalesTargetService;
+import com.croods.vyaparerp.vo.datatable.DataTableMetaDTO;
+
+import lombok.extern.java.Log;
+
+@Log
+@Controller
+@RequestMapping("/salestarget")
+public class SalesTargetControler {
+
+	@Autowired
+	private SalesTargetService salesTargetService;
+
+	@Autowired
+	private SalesTargetRepository salesTargetRepository;
+
+	@GetMapping("")
+	public ModelAndView newSalesTarget(HttpSession session) {
+		ModelAndView mv = new ModelAndView("/salestarget/sales_target");
+
+		mv.addObject("isDelete", MenuPermission.havePermission(session, Constant.DEPARTMENT, Constant.DELETE));
+		mv.addObject("isEdit", MenuPermission.havePermission(session, Constant.DEPARTMENT, Constant.EDIT));
+		mv.addObject("isInsert", MenuPermission.havePermission(session, Constant.DEPARTMENT, Constant.INSERT));
+		mv.addObject("branchList",salesTargetService.getCustomListOfBranch(Long.parseLong(session.getAttribute("companyId").toString())));
+
+		return mv;
+	}
+
+	@GetMapping("/download/excel")
+	@ResponseBody
+	public String downloadExcel(@RequestParam("month") String month, @RequestParam("branch") List<Long> branch,
+			HttpSession session, HttpServletResponse response) throws IOException {
+		log.info("Branches ------>>>>>>>>> " + branch);
+		return salesTargetService.downloadExcel(month, branch, session, response);
+	}
+
+	@PostMapping("/check/excel")
+	@ResponseBody
+	public String validateExcel(@RequestParam("branchIds") String branchIds,
+			@RequestParam("excelFile") MultipartFile file, HttpSession session) throws IOException {
+		try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+			Sheet sheet = workbook.getSheetAt(0);
+
+			for (int rowNum = 6; rowNum <= sheet.getLastRowNum(); rowNum++) {
+				Row row = sheet.getRow(rowNum);
+
+				if (row != null) {
+					List<String> validationErrors = new ArrayList<>();
+
+					for (int colNum = 1; colNum < row.getLastCellNum(); colNum++) {
+						Cell cell = row.getCell(colNum);
+
+						if (cell != null) {
+							if (colNum != 0) {
+								if (cell.getCellTypeEnum() == CellType.NUMERIC) {
+									double numericValue = cell.getNumericCellValue();
+									if (numericValue < 0) {
+										validationErrors.add("Row " + (rowNum + 1) + ", Column No. " + (colNum + 1)
+												+ " must be numeric and non-negative.");
+									}
+								} else if (cell.toString().contains("-")) {
+									validationErrors.add("Row " + (rowNum + 1) + ", Column No. " + (colNum + 1)
+											+ " cannot contain hyphen.");
+								}
+							}
+						}
+					}
+
+					if (!validationErrors.isEmpty()) {
+						return "Row " + (rowNum + 1) + " validation errors: " + String.join(", ", validationErrors);
+					}
+				}
+			}
+
+			File fb = ImageResize.convert(file);
+			String filepath = fb.getAbsolutePath();
+			log.info(filepath);
+			salesTargetService.readExcel(branchIds, filepath, session);
+			return "success";
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "An error occurred while processing the Excel file.";
+		}
+	}
+
+	@RequestMapping("/datatable")
+	@ResponseBody
+	public DataTableSalesTargetResponseDTO getUsers(@RequestParam Map<String, String> allRequestParams,
+			HttpSession session) {
+		Integer totallength = 0;
+		String serachValue = "";
+		String month = "";
+		int isMonth = 0;
+		
+		if (allRequestParams.get("search.value") != null && !allRequestParams.get("search.value").equals("")) {
+			serachValue = allRequestParams.get("search.value").toString();
+		}
+		
+		if (allRequestParams.containsKey("months") && StringUtils.isNotBlank(allRequestParams.get("months"))) {
+			month  = allRequestParams.get("months");
+			log.info("month :: " + month);
+			isMonth = 1;
+		}
+		
+		totallength = salesTargetRepository.countAllSalesTarget(isMonth, month, serachValue, Long.parseLong(session.getAttribute("companyId").toString()), 0);
+		int start = Integer.parseInt(allRequestParams.get("start"));
+		String pageLength = allRequestParams.get("length");
+		int length = 0, page = 0, offset = 0, draw = 1;
+
+		try {
+			if (allRequestParams.get("draw") != null && !allRequestParams.get("draw").equals("")) {
+				draw = 1;
+			} else {
+				draw = Integer.parseInt(allRequestParams.get("draw").toString());
+			}
+		} catch (Exception e) {
+		}
+
+		if (!pageLength.equals("-1")) {
+			length = Integer.parseInt(allRequestParams.get("length"));
+			page = start / length;
+			offset = page * length;
+		} else {
+			length = totallength;
+			offset = 0;
+		}
+		List<SalesTargetDataTableDto> list = new ArrayList<SalesTargetDataTableDto>();
+		
+		list = salesTargetRepository.findAllSalesTargetDatatable(isMonth, month, serachValue, Long.parseLong(session.getAttribute("companyId").toString()), 0, length, offset);
+		double totalRecords = totallength;
+		DataTableSalesTargetResponseDTO dto = new DataTableSalesTargetResponseDTO();
+		dto.setData(list);
+		dto.setDraw(Integer.parseInt(allRequestParams.get("draw")));
+		dto.setError(null);
+		dto.setRecordsFiltered((int) totalRecords);
+		dto.setRecordsTotal((int) totalRecords);
+		dto.setDataTableMetaDTO(new DataTableMetaDTO(page, (int) Math.ceil((totalRecords) / length), (int) length, (int) totalRecords));
+		return dto;
+	}
+
+	@GetMapping("/sales-targets")
+	public void exportSalesTargetsToExcel(@RequestParam("month") String months,
+			@RequestParam("branchId") long branchIds,
+			HttpSession session,
+			HttpServletResponse response) throws IOException {
+		System.out.println("months" + months + " - " + "branchIds" + branchIds);
+		try {
+			
+			List<SalesTargetDTO> salesTargets = salesTargetRepository.getHeaderValues(Long.parseLong(session.getAttribute("companyId").toString()), 0);			
+			List<String> headers = new ArrayList<>();
+			List<SalesTargetDTO> salesTypeNameIdList = salesTargetRepository.getSalesTypeNameId();
+			HashMap<String, Long> salesTypeNameId =  new HashMap<>();
+			salesTypeNameIdList.forEach(list -> {
+				log.info("SalesTypeName : " + list.getSalesTypeName() + "SalesTargetTypeId : " + list.getSalesTargetTypeId());
+				salesTypeNameId.put(list.getSalesTypeName(), list.getSalesTargetTypeId());
+			});
+			
+			salesTargets.forEach(target -> {
+			    log.info("divDepName: " + target);
+			    headers.add(target.getDivDepName());
+			});
+			
+			headers.removeIf(item -> item == null || item.isBlank());
+
+			String tmpdir = System.getProperty("java.io.tmpdir");
+			Workbook workbook = new XSSFWorkbook();
+			String filename = "Target-File";
+			Sheet sheet = workbook.createSheet(filename);
+			Font headerFont = workbook.createFont();
+			headerFont.setBold(true);
+			headerFont.setFontHeightInPoints((short) 12);
+			headerFont.setColor(IndexedColors.RED.getIndex());
+
+			CellStyle headerCellStyle = workbook.createCellStyle();
+			headerCellStyle.setFont(headerFont);
+
+			String[] staticColumns = { Constant.Date, Constant.Bill_Count, Constant.Amount };
+			Row headerRow = sheet.createRow(5);
+			for (int i = 0; i < staticColumns.length; i++) {
+				Cell cell = headerRow.createCell(i);
+				cell.setCellValue(staticColumns[i]);
+				cell.setCellStyle(headerCellStyle);
+			}
+
+			Row firstRow = sheet.createRow(0);
+			Cell monthCell = firstRow.createCell(0);
+			monthCell.setCellValue("Target Month : " + months);
+			monthCell.setCellStyle(headerCellStyle);
+
+			Row secondRow = sheet.createRow(1);
+			Cell branchCell = secondRow.createCell(0);
+			String b = salesTargetRepository.getBranchNameByBranchId(branchIds);
+			branchCell.setCellValue("Target Branches : " + b);
+			branchCell.setCellStyle(headerCellStyle);
+
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM");
+			Calendar calendar = Calendar.getInstance();
+
+			Date selectedMonth = dateFormat.parse(months);
+
+			for (int i = 0; i < headers.size(); i++) {
+				String dynamicColumn = headers.get(i);
+				Cell cell = headerRow.createCell(i + staticColumns.length);
+				cell.setCellValue(dynamicColumn);
+				cell.setCellStyle(headerCellStyle);
+			}
+
+			calendar.setTime(selectedMonth);
+			int rowIndex = 6;
+			while (calendar.get(Calendar.MONTH) == selectedMonth.getMonth()) {
+				Row row = sheet.createRow(rowIndex++); 
+				Cell dateCell = row.createCell(0);
+
+				SimpleDateFormat dateFormat1 = new SimpleDateFormat("yyyy-MM-dd");
+				String formattedDate = dateFormat1.format(calendar.getTime());
+
+				dateCell.setCellValue(formattedDate);
+
+				calendar.add(Calendar.DAY_OF_MONTH, 1);
+			}
+			
+			DateFormat dateFormat1 = new SimpleDateFormat("yyyy-MM-dd");
+			
+			for(int j = 6; j <= sheet.getLastRowNum(); j++) {
+				Row dataRow = sheet.getRow(j);
+				Cell dateColumn = dataRow.getCell(0);
+				System.out.println("dateColumn --------->>>>>>> : " + dateColumn);
+				for(int i = 1; i < headerRow.getLastCellNum(); i++) {
+					Cell headerValue = headerRow.getCell(i);
+					System.out.println("headerValue --------->>>>>>> : " + headerValue);
+					Long id = salesTypeNameId.get(headerValue.getStringCellValue());
+					Date date = dateFormat1.parse(dateColumn.toString());
+					System.err.println("id -------->>> : "+ id);
+					try {
+						Double targetValue = salesTargetRepository.getTargetValue(id, date, branchIds);
+						if(targetValue != null) {
+							dataRow.createCell(i).setCellValue(targetValue);
+						} 
+//						else {
+//							dataRow.createCell(i).setCellValue(0);
+//						}
+						log.info("targetValue ------->>> : " + targetValue);
+
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					
+					
+				}	
+			}
+
+			FileOutputStream fileOut = new FileOutputStream(tmpdir + "/" + filename + ".xlsx");
+			workbook.write(fileOut);
+			String filePathToBeServed = tmpdir + "/" + filename + ".xlsx";
+			File fileToDownload = new File(filePathToBeServed);
+			InputStream inputStream = new FileInputStream(fileToDownload);
+			response.setContentType("application/force-download");
+			response.setHeader("Content-Disposition", "attachment; filename=" + filename + ".xlsx");
+			StreamUtils.copy(inputStream, response.getOutputStream());
+			response.flushBuffer();
+			inputStream.close();
+			fileOut.close();
+			workbook.close();
+			response.getOutputStream().close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@PostMapping("/delete")
+	@ResponseBody
+	public String deleteDivision(@RequestParam(value = "month") String month,
+			@RequestParam(value = "branchId") long branchId
+			) {
+		System.out.println("months ::-->> " + month + "branchIds ::-->>" + branchId);
+		try {
+			int rsponse = salesTargetRepository.deleteSalesTarget(branchId, month);
+			System.out.println("rsponse--------->>>>>>>> :: "+rsponse);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return "success";
+	}
+	
+	
+	@GetMapping("/test")
+	public ModelAndView show()
+	{
+		ModelAndView mv = new ModelAndView("test/test");
+		return mv;
+	}
+	
+	@GetMapping("/get/target")
+	@ResponseBody
+	public List<TargetDto> getDailySalesTarget(HttpSession session)
+	{
+		long branchId  = Long.parseLong(session.getAttribute("userId").toString()) ;
+		System.err.println("branchId ----->>>>: "  +branchId);
+		
+		Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String currentDate = sdf.format(date);
+        
+			List<TargetDto> target = salesTargetRepository.getDailySalesTarget(currentDate, branchId, 0);
+			System.out.println("size ===== "+target.size());
+			target.forEach(t -> {
+				System.out.println("SalesTypeName : " +t.getSalesTypeName());
+				System.out.println("TargetValue : " +t.getTargetValue());
+				System.out.println("FullFill : " +t.getFullFill());
+			});
+		
+		return target;		
+	}
+}
