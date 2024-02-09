@@ -1,0 +1,333 @@
+$(document).ready(function () {
+    //get all product for Local storage work with offline
+    /*var db = new indexDB("productDB");
+    db.CreateTable("product", "productVarientId");*/
+
+    //Dexie.delete('productDB');
+
+    mApp.blockPage({type: "loader", state: "success", message: "Loading..."});
+
+    db = new Dexie("productDB");
+
+    db.version(1).stores(
+        {
+            product: 'productVarientId,brandId,categoryId,discount,disocuntType,itemcode,mrp,noOfDecimalPlaces,productName,taxId,taxIncluding,taxName,taxRate,varientName,measurementCode',
+            sales: 'salesNo,total,salesItems'
+        });
+
+    db.product.clear();
+    fatchAlldata(function (results) {
+        mApp.unblockPage();
+    });
+
+
+});
+
+function fatchAlldata(callback) {
+    $.post("/product/allproduct/offline", function (data) {
+        products = data;
+        //console.log(products)
+
+
+        db.product.bulkAdd(products).then(function (lastKey) {
+            console.log("Done ");
+            console.log("Last id was: " + lastKey); // Will be 100000.
+            //  defaultproduct();
+            callback();
+
+            //get product by id
+            //-----------------------------------------------------------
+            /* db.product.get(26222).then(function(p)
+                 {
+                   console.log("p number 26222: " + JSON.stringify(p));
+                 });
+             //-----------------------------------------------------------
+
+             //get product by itemcode
+             //-----------------------------------------------------------
+             db.product.where("itemcode").equalsIgnoreCase("1046").each(function (p)
+             {
+                 console.log("Found: " + p.productName + ". mrp: " + p.mrp);
+             }).catch(function (error) {
+                 console.error(error);
+             });
+             //-----------------------------------------------------------
+
+
+             //get product by product name Like Soap
+             //-----------------------------------------------------------
+
+             db.product.filter (function (p)
+             {
+             return /Soap/.test(p.productName);
+             })
+             .toArray()
+             .then(function(result)
+             {
+                 console.log(result);
+                 alert ("Found " + result.length + " p containing the word 'Soap' in its name...");
+             });
+             //-----------------------------------------------------------
+*/
+        }).catch(Dexie.BulkError, function (e) {
+            // Explicitely catching the bulkAdd() operation makes those successful
+            // additions commit despite that there were errors.
+            console.error("Some  did not succeed. However, " +
+                14000 - e.failures.length + "  was added successfully");
+        });
+
+        //	db.setJson( "product",data);
+        //store json to DB indexdb
+
+        /*$.each( data, function( key, value ) {
+            db.set({ productVarientId: value.productVarientId, productName:value.productName,varientName:value.varientName,brandId:value.brandId,categoryId:value.categoryId,discount:value.discount,disocuntType:value.disocuntType,itemcode:value.itemcode,mrp:value.mrp,taxId:value.taxId,taxIncluding:value.taxIncluding,taxName:value.taxName,taxRate:value.taxRate,noOfDecimalPlaces:value.noOfDecimalPlaces}, "product");
+            console.log(value.productVarientId)
+        });*/
+
+        //db.get(1, "product");
+        //db.remove(1, "product");
+
+        defaultproduct();
+    });
+
+}
+function defaultproduct() {
+    $("#producthere").empty();
+    //TotalData=0;
+    //var db = new indexDB("productDB");
+    //alert(db.countAllrecords("product"));
+    /*$.post("/product/pos/count/json", { catgory:$("#category").val(),brand:$("#brand").val()})
+		.done(function( data ) {
+			TotalData=data;
+		});*/
+    db.product.count(function (count) {
+        TotalData = count;
+
+    });
+    searchindex = 0;
+
+    $("#producthere").empty();
+    if ($("#category").val() == "0" && $("#brand").val() == "0") {
+        db.product.each(function (p) {
+            searchindex += 10;
+            $("#nodataavailbal").addClass("m--hide");
+            var imgsrc = '';
+            name = "";
+            // imgsrc = '/No-image-found.jpg'
+            if (p.src == null) {
+                imgsrc = '/No-image-found.jpg'
+            } else {
+                imgsrc = REALPATH + '/' + p.src;
+            }
+            if (p.productName.length > 14) {
+                name = p.productName.substring(0, 14);
+                name += "..."
+            } else {
+                name = p.productName;
+            }
+            s = '<div class="col-3 m--padding-top-0 m--padding-right-0 m--padding-left-0">' +
+                '<a href="javascript:void(0)" onclick="sell(`' + p.productVarientId + '`)" style="text-decoration:none"><div class="m-widget29 pos-product">' +
+                '<div class="m-widget_content m--padding-5 veryImportant" data-skin="dark" class="" data-toggle="m-tooltip" data-placement="bottom"  title="' + p.productName + '">' +
+                '<div class="m-widget_content-items" style="display: flex; flex-direction: column;overflow:hidden;">' +
+                '<div class="m-widget_content-item"> <img class="lazy" style="width: auto; height:80px; border-radius: 10%" src="" data-src=' + imgsrc + ' title="" id="default_image" /></div>' +
+                '<div class="m-widget_content-item"><span>' + name + '</span>' +
+                '<span class="m--font-accent" style="font-size: 1.0rem;font-weight: 600;">' + p.mrp + '</span></div></div></div></a></div></div>'
+
+            $("#producthere").append(s);
+            $('.veryImportant').tooltip();
+        });
+    } else if ($("#category").val() != "0" && $("#brand").val() == "0") {
+        db.product.where("categoryId").equals(parseInt($("#category").val())).each(function (p) {
+            searchindex += 10;
+            $("#nodataavailbal").addClass("m--hide");
+            var imgsrc = '';
+            name = "";
+            if (p.src == null) {
+                imgsrc = '/No-image-found.jpg'
+            } else {
+                imgsrc = REALPATH + '/' + p.src;
+            }
+            if (p.productName.length > 14) {
+                name = p.productName.substring(0, 14);
+                name += "..."
+            } else {
+                name = p.productName;
+            }
+
+            s = '<div class="col-3 m--padding-top-0 m--padding-right-0 m--padding-left-0">' +
+                '<a href="javascript:void(0)" onclick="sell(`' + p.productVarientId + '`)" style="text-decoration:none"><div class="m-widget29 pos-product">' +
+                '<div class="m-widget_content m--padding-5 veryImportant" data-skin="dark" class="" data-toggle="m-tooltip" data-placement="bottom"  title="' + p.productName + '">' +
+                '<div class="m-widget_content-items" style="display: flex; flex-direction: column;overflow:hidden;">' +
+                '<div class="m-widget_content-item"> <img class="lazy" style="width: auto; height:80px; border-radius: 10%" data-src=' + imgsrc + ' title="" id="default_image" /></div>' +
+                '<div class="m-widget_content-item"><span>' + name + '</span>' +
+                '<span class="m--font-accent" style="font-size: 1.0rem;font-weight: 600;">' + p.mrp + '</span></div></div></div></a></div></div>'
+
+            $("#producthere").append(s);
+            $('.veryImportant').tooltip();
+
+        });
+    } else if ($("#category").val() == "0" && $("#brand").val() != "0") {
+        db.product.where({brandId: parseInt($("#brand").val())}).each(function (p) {
+            searchindex += 10;
+            $("#nodataavailbal").addClass("m--hide");
+            var imgsrc = '';
+            name = "";
+            if (p.src == null) {
+                imgsrc = '/No-image-found.jpg'
+            } else {
+                imgsrc = REALPATH + '/' + p.src;
+            }
+            if (p.productName.length > 14) {
+                name = p.productName.substring(0, 14);
+                name += "..."
+            } else {
+                name = p.productName;
+            }
+
+            s = '<div class="col-3 m--padding-top-0 m--padding-right-0 m--padding-left-0">' +
+                '<a href="javascript:void(0)" onclick="sell(`' + p.productVarientId + '`)" style="text-decoration:none"><div class="m-widget29 pos-product">' +
+                '<div class="m-widget_content m--padding-5 veryImportant" data-skin="dark" class="" data-toggle="m-tooltip" data-placement="bottom"  title="' + p.productName + '">' +
+                '<div class="m-widget_content-items" style="display: flex; flex-direction: column;overflow:hidden;">' +
+                '<div class="m-widget_content-item"> <img class="lazy" style="width: auto; height:80px; border-radius: 10%" data-src=' + imgsrc + ' title="" id="default_image" /></div>' +
+                '<div class="m-widget_content-item"><span>' + name + '</span>' +
+                '<span class="m--font-accent" style="font-size: 1.0rem;font-weight: 600;">' + p.mrp + '</span></div></div></div></a></div></div>'
+
+            $("#producthere").append(s);
+            $('.veryImportant').tooltip();
+        });
+    } else if ($("#category").val() != "0" && $("#brand").val() != "0") {
+        db.product.where({
+            categoryId: parseInt($("#category").val()),
+            brandId: parseInt($("#brand").val())
+        }).each(function (p) {
+            searchindex += 10;
+            $("#nodataavailbal").addClass("m--hide");
+            var imgsrc = '';
+            name = "";
+            if (p.src == null) {
+                imgsrc = '/No-image-found.jpg'
+            } else {
+                imgsrc = REALPATH + '/' + p.src;
+            }
+            if (p.productName.length > 14) {
+                name = p.productName.substring(0, 14);
+                name += "..."
+            } else {
+                name = p.productName;
+            }
+
+            s = '<div class="col-3 m--padding-top-0 m--padding-right-0 m--padding-left-0">' +
+                '<a href="javascript:void(0)" onclick="sell(`' + p.productVarientId + '`)" style="text-decoration:none"><div class="m-widget29 pos-product">' +
+                '<div class="m-widget_content m--padding-5 veryImportant" data-skin="dark" class="" data-toggle="m-tooltip" data-placement="bottom"  title="' + p.productName + '">' +
+                '<div class="m-widget_content-items" style="display: flex; flex-direction: column;overflow:hidden;">' +
+                '<div class="m-widget_content-item"> <img class="lazy" style="width: auto; height:80px; border-radius: 10%" data-src=' + imgsrc + ' title="" id="default_image" /></div>' +
+                '<div class="m-widget_content-item"><span>' + name + '</span>' +
+                '<span class="m--font-accent" style="font-size: 1.0rem;font-weight: 600;">' + p.mrp + '</span></div></div></div></a></div></div>'
+
+            $("#producthere").append(s);
+            $('.veryImportant').tooltip();
+
+        });
+    }
+    /*db.product.where({categoryId:1207}).each(function (p)
+		    {// //console.log("Found: " + p.productName + ". mrp: " + p.mrp);
+	    	 //
+			 var s="";
+			 var name="";
+			// countData=p.length;
+					  searchindex+=10;
+					  $("#nodataavailbal").addClass("m--hide");
+
+
+						var imgsrc='';
+						name="";
+						//if(value.src==null){
+							imgsrc='/No-image-found.jpg'
+						//}
+						else{
+							imgsrc=REALPATH+'/'+value.src;
+						}
+
+						if(p.productName.length>17){
+							name=p.productName.substring(0, 17);
+							name+="..."
+						}else{
+							name=p.productName;
+						}
+
+						s='<div class="col-3 m--padding-top-0 m--padding-right-0 m--padding-left-0">'+
+						'<a href="javascript:void(0)" onclick="sell(`'+p.productVarientId+'`)" style="text-decoration:none"><div class="m-widget29 pos-product">'+
+						'<div class="m-widget_content m--padding-5 veryImportant" data-skin="dark" class="" data-toggle="m-tooltip" data-placement="bottom"  title="'+p.productName+'">'+
+						'<div class="m-widget_content-items" style="display: flex; flex-direction: column;overflow":hidden;">'+
+						'<div class="m-widget_content-item"> <img class="pos-img" style="width: 100%; height:80px; border-radius: 10%;margin:0 auto;" src='+imgsrc+' title="" id="default_image" /></div>'+
+						'<div class="m-widget_content-item"><span>'+name+'</span>'+
+						'<span class="m--font-accent" style="font-size: 1.0rem;font-weight: 600;">'+p.mrp+'</span></div></div></div></a></div></div>'
+
+						$("#producthere").append(s);
+						$( '.veryImportant' ).tooltip();
+
+				//}
+		    }).catch(function (error) {
+		        console.error(error);
+		    });*/
+
+    /*$.post( "/product/pos/search/json", { catgory:$("#category").val(),brand:$("#brand").val(),limit:10,exclude:searchindex})
+		.done(function( data ) {
+
+		$("#producthere").empty();
+		 var s="";
+		 var name="";
+		 countData=data.length;
+			if(data.length==0){
+				$("#nodataavailbal").removeClass("m--hide");
+			}else{
+				  searchindex+=10;
+				  $("#nodataavailbal").addClass("m--hide");
+				  $.each( data, function( key, value ) {
+
+					var imgsrc='';
+					name="";
+					if(value.src==null){
+						imgsrc='/No-image-found.jpg'
+					}
+					else{
+						imgsrc=REALPATH+'/'+value.src;
+					}
+
+					if(value.name.length>17){
+						name=value.name.substring(0, 17);
+						name+="..."
+					}else{
+						name=value.name;
+					}
+
+					s='<div class="col-3 m--padding-top-0 m--padding-right-0 m--padding-left-0">'+
+					'<a href="javascript:void(0)" onclick="sell(`'+value.product_varient_id+'`)" style="text-decoration:none"><div class="m-widget29 pos-product">'+
+					'<div class="m-widget_content m--padding-5 veryImportant" data-skin="dark" class="" data-toggle="m-tooltip" data-placement="bottom"  title="'+value.name+'">'+
+					'<div class="m-widget_content-items" style="display: flex; flex-direction: column;overflow:hidden;">'+
+					'<div class="m-widget_content-item"> <img class="pos-img" style="width: 100%; height:80px; border-radius: 10%;margin:0 auto;" src='+imgsrc+' title="" id="default_image" /></div>'+
+					'<div class="m-widget_content-item"><span>'+name+'</span>'+
+					'<span class="m--font-accent" style="font-size: 1.0rem;font-weight: 600;">'+value.retailer_price+'</span></div></div></div></a></div></div>'
+
+					$("#producthere").append(s);
+					$( '.veryImportant' ).tooltip();
+				});
+			}
+		});*/
+    setTimeout(
+        function () {
+            var lazyloadImages = document.querySelectorAll("img.lazy");
+            for (var i = 0; i < 20; i++) {
+                $(lazyloadImages[i]).attr("src", $(lazyloadImages[i]).attr("data-src"))
+                $(lazyloadImages[i]).removeClass("lazy");
+            }
+        }, 2000);
+
+
+}
+
+function sell(productvariantId) {
+    if ($("#salestype").val() == 'sales') {
+        getProductInfoByProductVarientId(productvariantId)
+    }
+}
