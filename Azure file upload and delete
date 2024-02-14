@@ -134,3 +134,165 @@
         }
 
     }
+var isModalOpen =0;
+$(document).ready(function () {
+	dailySalesTarget();
+	FocusProducts();
+	dailySalesNewCustomer();
+	var lastShownDate = sessionStorage.getItem('modalShownDate');
+		var currentDate = new Date().toDateString();
+		if (lastShownDate !== currentDate) {
+			isModalOpen =1;
+		}
+
+
+function checkSalesRegister(){
+    blockPage()
+    $.post("/salesregister/checksalesregister", function (data) {
+        if (data.salesRegisterId == 0) {
+            //$("#preloader").hide();
+                showPage(1);
+                
+				unblockPage();
+				if(FLAGNOTSTARTPOS){
+                    blockPageMsg("Please check Financial Year or Contact to admin for the and refresh POS")
+                }else if(EDIT_POS_REDIRECT!=1){
+                    $('#cash_in_hand_model').modal({backdrop: 'static', keyboard: false})
+		            $('#cash_in_hand_model').modal('show');
+		            if(CASHMANAGERFLOW==1){
+		                $("#cashmanagerflow_selection_manager").removeClass("m--hide")
+		            }else{
+		                $("#cashmanagerflow_selection_manager").addClass("m--hide")
+		            }
+		            ISSALESREGISTEROPEN=false
+	            }
+			
+            
+        } else {
+        var lastsync = JSON.parse(localStorage.getItem('productlastsync'));
+            //if (lastsync!= null) {//comment 
+                    //$("#preloader").hide();
+            //  showPage();
+                //unblockPage();
+        //  }
+            $("#salesregisterid").val(data.salesRegisterId);
+            getAllHoldBill(data.salesRegisterId);
+            LastBillIdFirstTime();
+            ISSALESREGISTEROPEN=true;
+            var startDate = moment(moment(data.registerStartDate).format('DD-MM-YYYY'), "DD-MM-YYYY");
+            var endDate = moment();
+            if ((endDate.diff(startDate, 'days')) >= 1) {
+                toast("ERROR","Sales Register Is Open For Last " + endDate.diff(startDate, 'days') + "  Days.");
+            }
+            unblockPage();
+             fatchAlldata(function(results) {
+                  unblockPage();
+                //setTimeout(function () {
+                            //$("#preloader").hide();
+                            
+                 //   }, 10000);
+            
+                /*if(FOCUSONPOS==0){
+                    $('#contactVo').val("0").trigger('change');
+                    $("#contactVo").focus();
+                    $("#contactVo").select2("open");
+                }else{
+                      $("#searchBarcode").focus();
+                }*/
+                showPage(0);
+                if(FLAGNOTSTARTPOS){
+                    blockPageMsg("Please check Financial Year or Contact to admin for the and refresh POS")
+                }else{
+                    $("#product_sidebar_list_div_items").empty();
+                    var departmentId = Number($("#categoryId").val());
+                    $.ajax({
+                        url: "/sales/pos/fastsellingproducts/" + departmentId,
+                        method: "GET",
+                        success: function (data) {
+                            if (data.length === 0) {
+                                $("#product_sidebar_list_div_items").append('<div class="col-md-12 col-sm-12 mb-2 pl-0"><a class="product-list-item" href="javascript:void(0);"><div class="card product-card"><div class="card-body p-2"><h5 class="card-title" style="text-align: center;">No Data Available</h5></div></div></a></div>');
+                            } else {
+                                data.forEach(function (p) {
+                                    var imgsrc = '';
+                                    //var name = (p.name.length > 14) ? p.name.substring(0, 14) + "..." : p.name;
+                
+                                    $("#product_sidebar_list_div_items").append('<div class="col-md-3 col-sm-3 mb-2 pl-0">' +
+                                    '<a class="product-list-item" href="javascript:void(0)">' +
+                                    '<div class="card product-card" title="' + p.name + '">' +
+                                    '<div class="card-body p-2">' +
+                                    '<h5 class="card-title">' + p.name + '</h5>' +
+                                    '<p><strong>Total Quantity Sold : ' + p.total_quantity_sold + '</strong></p>' +
+                                    '</div>' +
+                                    '</div>' +
+                                    '</a>' +
+                                    '</div>');
+        
+                                });
+                            }
+                        },
+                        error: function (error) {
+                            console.error("Error retrieving product information:", error);
+                        }
+                    });
+                }
+               
+            });
+        }
+    });
+    // receipt upload
+    $.post("/salesregister/checkReceiptUpload", function (data) {
+        if (data.length !== 0) {
+            console.log("aa gaye bhai bs" , data);
+            var tbody = $('#confirm_receipt_uploaded').find('tbody');
+            
+            data.forEach(function(item) {
+                var fromDate = new Date(item.registerStartDate).toISOString().split('T')[0];
+                var toDate = new Date(item.registerEndDate).toISOString().split('T')[0];
+                var row = '<tr>' +
+                '<td>' + fromDate  + '</td>' +
+                '<td>' + toDate + '</td>' +
+                '<td><input type="file" name="file"></td>' +
+                '<input type="hidden" name="salesRegisterId" value="' + item.salesRegisterId + '">' +
+            '</tr>';
+                tbody.append(row);
+            });
+    if(isModalOpen == 1){
+            $('#confirm_receipt_uploaded').modal('show');
+            sessionStorage.setItem('modalShownDate', new Date().toDateString());
+        }
+        }
+    });
+    
+    // close receipt
+}
+function saveBankReceipts() {
+    var formData = new FormData();
+    $('.bankReceiptTableBody tr').each(function(index, row) {
+        var fileInput = $(row).find('input[name="file"]')[0];
+        var file = fileInput.files.length > 0 ? fileInput.files[0] : null;
+        var salesRegisterId = $(row).find('input[name="salesRegisterId"]').val();
+        if (file) {
+            formData.append('files', file);
+            formData.append('data', salesRegisterId);
+        }
+    });
+
+    $.ajax({
+        url: '/salesregister/saveBankReceipt',
+        method: 'POST',
+        processData: false,
+        contentType: false,
+        data: formData,
+        success: function(response) {
+            toastr.success('Bank Receipt Uploaded');
+            $('#confirm_receipt_uploaded').modal('hide');
+        },
+        error: function(xhr, status, error) {
+            console.error('Error saving data:', error);
+            $('#confirm_receipt_uploaded').modal('hide');
+        }
+    });
+}
+
+
+
