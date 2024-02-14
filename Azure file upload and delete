@@ -1,0 +1,136 @@
+
+    @PostMapping("/saveBankReceipt")
+    @ResponseBody
+    public Map<String, Object> saveBankReceipt(@RequestParam("files") List<MultipartFile> files,HttpSession session,
+            @RequestParam("data") List<SalesRegisterVo> data, HttpServletRequest request) {
+			HashMap<String, Object> map = new HashMap<String, Object>();
+			for (int i = 0; i < files.size(); i++) {
+	            MultipartFile file = files.get(i);
+	            long salesRegisterId = data.get(i).getSalesRegisterId();
+	          try {
+	  
+	              if (!file.isEmpty()) {
+	                  FileValidationResponse response = securityValidation.validateFile(file, Constant.FILE_IMAGE);
+	                  if (!response.isValid()) {
+	                      map.put("status", "500");
+	                      map.put("msg", response.getMessage());
+	                      return map;
+	                  } else {
+	                      if (file.getSize() > MAX_IMAGE_SIZE) {
+	                          log.info("file size" + file.getSize());
+	                          map.put("status", "500");
+	                          map.put("msg", "Image size is more than 800KB");
+	                          return map;
+	                      }
+	                      long companyId = Long.parseLong(String.valueOf(session.getAttribute("companyId").toString()));
+	                      String fileName, fileExtension = "";
+	                      File fb = ImageResize.convert(file);
+	                      Calendar calendar = Calendar.getInstance();
+	                      fileExtension = ProductController.getFileExtension(fb);
+	  
+	                      fileName = salesRegisterId + "-" + calendar.getTimeInMillis() + "." + fileExtension;
+	                      String imageSrc = BUCKET + "/" + IMAGE_LOCATION + "/" + companyId + "/" + salesRegisterId + "/"
+	                              + fileName;
+	                      String uploadStatus = "500";
+	                      String azureImageSrc = "";
+	                      String imagePath = "";
+	                      if (FILE_UPLOAD_SERVER.equals(Constant.FILE_UPLOAD_SERVER_AZURE)) {
+	                          Map<String, String> azureResponse = azureBlobService.sendImageFileToAZURE(fb, fileName,
+	                                  fileExtension, companyId, salesRegisterId);
+	                          if (!azureResponse.isEmpty()) {
+	                              if (StringUtils.isNotBlank(azureResponse.get("status"))
+	                                      && azureResponse.get("status").equals("200")) {
+	                                  uploadStatus = "200";
+	                                  azureImageSrc = azureResponse.get("imageSrc");
+	                                  imagePath = azureImageSrc;
+	                              }
+	                          }
+	                      } else {
+	                          AWSCredentials credentials = new BasicAWSCredentials(ACCESS_KEY, SECRET_KEY);
+	                          java.security.Security.setProperty("networkaddress.cache.ttl", S3_CACHE);
+	                          s3 = new AmazonS3Client(credentials);
+	                          s3.setEndpoint(END_POINT_URL);
+	  
+	                          Part part = request.getPart("file-up");
+	                          InputStream targetStream = new FileInputStream(fb);
+	  
+	                          ObjectMetadata objectMetadata = new ObjectMetadata();
+	                          if (fileExtension.equalsIgnoreCase("png"))
+	                              objectMetadata.setContentType(MediaType.IMAGE_PNG_VALUE);
+	                          else if (fileExtension.equalsIgnoreCase("jpg"))
+	                              objectMetadata.setContentType(MediaType.IMAGE_JPEG_VALUE);
+	                          else if (fileExtension.equalsIgnoreCase("jpeg"))
+	                              objectMetadata.setContentType(MediaType.IMAGE_JPEG_VALUE);
+	 
+	                          objectMetadata.setContentLength(fb.length());
+	                          PutObjectRequest putObjectRequest = new PutObjectRequest(BUCKET,
+	                                  IMAGE_LOCATION + "/" + companyId + "/" + salesRegisterId + "/" + fileName, targetStream,
+	                                  objectMetadata);
+	                          // skip if do not want to access the image directly from S3
+	  
+	                          putObjectRequest.setCannedAcl(CannedAccessControlList.PublicRead);
+	                          // skip if do not want to access the image directly from S3
+	                          s3.putObject(putObjectRequest);
+	                          uploadStatus = "200";
+	                          imagePath = Constant.REALPATH + imageSrc;
+	                      }
+	  
+	                      if (uploadStatus == "200") {
+	                             System.err.println("hello");
+	                             SalesRegisterVo registerVo = data.get(i);
+		                         registerVo.setIsReceiptUpload(1);
+		                         registerVo.setReceiptPath(fileName);
+		                         registerVo.setSignedReceiptPath(azureImageSrc);
+		                         salesRegisterRepository.save(registerVo);
+	                      }
+	                     // map.put("data", productImageVo);
+	                      map.put("status", "200");
+	                  }
+	              }
+	          } catch (Exception e) {
+	              e.printStackTrace();
+	              map.put("status", "500");
+	            
+	          }
+	        }
+      return map;
+
+    }
+    
+    @RequestMapping(value = "/download/{id}")
+    @ResponseBody
+    public ResponseEntity<Resource> retrieveDocument(HttpServletRequest request, HttpServletResponse response, @PathVariable("id") long id, HttpSession session) throws IOException {
+        SalesRegisterVo registerVo = salesRegisterRepository.findBysalesRegisterIdAndBranchId(id, Long.parseLong(session.getAttribute("branchId").toString()));
+        long companyId = Long.parseLong(String.valueOf(session.getAttribute("companyId").toString()));
+        long salesRegisterId = registerVo.getSalesRegisterId();
+        //String fileLocation = COMPANY_DRIVE_FILE_LOCATION + "/" + companyId + "/" + "/" + id + "/" + driveVo.getDocPath();
+        String fileLocation = IMAGE_LOCATION + "/" + companyId + "/" + salesRegisterId + "/" + registerVo.getReceiptPath();
+        if(FILE_UPLOAD_SERVER.equals(Constant.FILE_UPLOAD_SERVER_AZURE)) {
+        	return azureBlobService.getDriveAttachmentFileFromAZURE(fileLocation, registerVo.getReceiptPath());
+        }else {
+        	String file_path = END_POINT_URL + "/" + BUCKET + "/" + fileLocation;//PURCHASE_ATTACHMENT_LOCATION + "/" + companyId + "/" + "/" + id + "/" + purchaseVo.getImgLocation();
+	        String file_name = registerVo.getReceiptPath();
+	        BufferedInputStream inputStream = new BufferedInputStream(new URL(file_path).openStream());
+	
+	        Files.copy(inputStream, Paths.get(System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + file_name), StandardCopyOption.REPLACE_EXISTING);
+	        Path filePath = Paths.get(System.getProperty("java.io.tmpdir") + System.getProperty("file.separator") + file_name);
+	        Resource resource = new UrlResource(filePath.toUri());
+	
+	        // Try to determine file's content type
+	        String contentType = null;
+	        try {
+	            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
+	        } catch (IOException ex) {
+	
+	        }
+	        if (contentType == null) {
+	            contentType = "application/octet-stream";
+	        }
+	
+	        return ResponseEntity.ok()
+	                .contentType(MediaType.parseMediaType("application/octet-stream"))
+	                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+	                .body(resource);
+        }
+
+    }
