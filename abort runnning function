@@ -1,0 +1,137 @@
+let currentController = null;
+
+async function categoryproduct(categoryId, name) {
+    if (currentController) {
+        currentController.abort();
+    }
+    
+    currentController = new AbortController();
+    const { signal } = currentController;
+    
+    return new Promise((resolve, reject) => {
+        const fetchData = async () => {
+            try {
+                $(".category-list .nav-link").removeClass("active");
+                $("#v-" + categoryId + "-tab").addClass("active");
+                $("#v-vegetable-1 ul").empty();
+                var s = "";
+
+                if (categoryId == 0) {
+                    $("#dynamicHeaderForImages").text("ALL");
+                    $("#v-vegetable-1-tab").addClass("active");
+                    await db.product.each(function (p) {
+                        if (signal.aborted) throw new Error('Aborted');
+                        var imgsrc = '';
+                        name = "";
+                        if (p.src == null) {
+                            imgsrc = '/No-image-found.jpg';
+                        } else {
+                            imgsrc = p.src;
+                        }
+                        if (p.productName.length > 14) {
+                            name = p.productName.substring(0, 14);
+                            name += "...";
+                        } else {
+                            name = p.productName;
+                        }
+                        s = '<li><a onclick="sell(`' + p.productVarientId + '`)">' +
+                            '<div class="product-detail">' +
+                            '<img src="' + imgsrc + '"/>' +
+                            '<div class="product-name" style="background-color: #e4e4e4;color: #000;">' +
+                            '<h6>' + name + '</h6>' +
+                            '</div>' +
+                            '</div>' +
+                            '</a></li>';
+                        $("#v-vegetable-1 ul").append(s);
+                    });
+                } else {
+                    $("#dynamicHeaderForImages").text(name);
+                    await db.product.where("categoryId").equals(parseInt(categoryId)).each(function (p) {
+                        if (signal.aborted) throw new Error('Aborted');
+                        var imgsrc = '';
+                        name = "";
+                        if (p.src == null) {
+                            imgsrc = '/No-image-found.jpg';
+                        } else {
+                            imgsrc = p.src;
+                        }
+                        if (p.productName.length > 14) {
+                            name = p.productName.substring(0, 14);
+                            name += "...";
+                        } else {
+                            name = p.productName;
+                        }
+
+                        s = '<li><a onclick="sell(`' + p.productVarientId + '`)">' +
+                            '<div class="product-detail">' +
+                            '<img src="' + imgsrc + '"/>' +
+                            '<div class="product-name" style="background-color: #e4e4e4;color: #000;">' +
+                            '<h6>' + name + '</h6>' +
+                            '</div>' +
+                            '</div>' +
+                            '</a></li>';
+
+                        $("#v-vegetable-1 ul").append(s);
+                    });
+                }
+                resolve();
+            } catch (error) {
+                if (error.message === 'Aborted') {
+                    reject('Fetch aborted');
+                } else {
+                    reject(error);
+                }
+            }
+        };
+
+        fetchData();
+    });
+}
+
+	function subcategoryproduct(categoryId,name) {
+		$("#dynamicHeaderForImages").text(name);
+		$(".category-list .nav-link").removeClass("active");
+		$("#v-"+categoryId+"-tab").addClass("active");
+		$("#v-vegetable-1 ul").empty();
+		var s="";
+       
+			db.product.where("subCategoryId").equals(parseInt(categoryId)).each(function (p) {
+				var imgsrc = '';
+				name = "";
+				if (p.src == null) {
+					imgsrc = '/No-image-found.jpg'
+				} else {
+					imgsrc =  p.src;
+				}
+				if (p.productName.length > 14) {
+					name = p.productName.substring(0, 14);
+					name += "..."
+				} else {
+					name = p.productName;
+				}
+	
+				s = '<li><a onclick="sell(`' + p.productVarientId + '`)">' +
+				'<div class="product-detail">' +
+					'<img src="' + imgsrc + '"/>' + 
+					'<div class="product-name" style="background-color: #e4e4e4;color: #000;">' +
+						'<h6>' + name + '</h6>' +
+					'</div>' +
+				'</div>' +
+			'</a></li>';
+
+					$("#v-vegetable-1 ul").append(s);
+				
+	
+			});
+		}
+	
+
+
+function sell(productvariantId) {
+    if (currentController) {
+        currentController.abort();
+    }
+    if ($("#salestype").val() == 'sales') {
+        getProductInfoByProductVarientId(productvariantId)
+    }
+}
