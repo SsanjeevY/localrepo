@@ -1,0 +1,211 @@
+Advanced Java Concepts
+1. Generics
+Generics enable types (classes and interfaces) to be parameters when defining classes, interfaces, and methods. The idea is to provide type safety without having to cast objects.
+
+java
+Copy code
+public class Box<T> {
+    private T t;
+
+    public void set(T t) {
+        this.t = t;
+    }
+
+    public T get() {
+        return t;
+    }
+}
+2. Concurrency and Multithreading
+Java provides a rich set of APIs for handling concurrency and multithreading, including the java.util.concurrent package.
+
+Executor Service: Manages a pool of threads, allowing you to run tasks asynchronously.
+
+java
+Copy code
+ExecutorService executorService = Executors.newFixedThreadPool(10);
+executorService.submit(() -> {
+    // Task to run
+});
+Locks: Provides more extensive locking operations than can be obtained using synchronized methods and statements.
+
+java
+Copy code
+Lock lock = new ReentrantLock();
+lock.lock();
+try {
+    // critical section
+} finally {
+    lock.unlock();
+}
+3. Streams API
+Introduced in Java 8, the Streams API allows for functional-style operations on streams of elements, such as map-reduce transformations.
+
+java
+Copy code
+List<String> filteredList = list.stream()
+    .filter(s -> s.startsWith("A"))
+    .collect(Collectors.toList());
+4. Optional
+Optional is a container object which may or may not contain a non-null value. It provides methods to deal with the presence or absence of a value.
+
+java
+Copy code
+Optional<String> optional = Optional.ofNullable(value);
+optional.ifPresent(System.out::println);
+String result = optional.orElse("default value");
+5. Lambda Expressions
+Lambda expressions provide a clear and concise way to represent one method interface using an expression.
+
+java
+Copy code
+List<String> list = Arrays.asList("a", "b", "c");
+list.forEach(item -> System.out.println(item));
+Advanced Spring Boot Concepts
+1. Spring Boot Actuator
+Spring Boot Actuator provides production-ready features to help you monitor and manage your application.
+
+Endpoints: Exposes various endpoints (e.g., /actuator/health, /actuator/metrics) to monitor the application.
+yaml
+Copy code
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+2. Spring Security
+Spring Security is a powerful and customizable authentication and access control framework for Java applications.
+
+Method Security: Allows you to use annotations to secure methods.
+
+java
+Copy code
+@PreAuthorize("hasRole('ADMIN')")
+public void secureMethod() {
+    // method implementation
+}
+Custom Authentication Provider: Implementing a custom authentication provider.
+
+java
+Copy code
+public class CustomAuthenticationProvider implements AuthenticationProvider {
+    @Override
+    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+        // custom authentication logic
+    }
+
+    @Override
+    public boolean supports(Class<?> authentication) {
+        return authentication.equals(UsernamePasswordAuthenticationToken.class);
+    }
+}
+3. Spring Boot Profiles
+Profiles provide a way to segregate parts of your application configuration and make it only available in certain environments.
+
+Application Properties: Define different properties for different profiles.
+
+properties
+Copy code
+# application-dev.properties
+server.port=8081
+
+# application-prod.properties
+server.port=8080
+Activating Profiles: Activate a profile using the spring.profiles.active property.
+
+yaml
+Copy code
+spring:
+  profiles:
+    active: dev
+4. Spring Boot Caching
+Spring Boot provides a simple abstraction for caching, allowing you to cache method results.
+
+Enable Caching: Use @EnableCaching annotation.
+
+java
+Copy code
+@SpringBootApplication
+@EnableCaching
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+Cacheable Annotation: Cache method results.
+
+java
+Copy code
+@Cacheable("items")
+public Item getItem(Long id) {
+    // method implementation
+}
+5. Spring Data JPA
+Spring Data JPA simplifies data access layers by providing repositories that implement JPA.
+
+JpaRepository: Provides CRUD operations without writing implementation.
+
+java
+Copy code
+public interface UserRepository extends JpaRepository<User, Long> {
+    List<User> findByLastName(String lastName);
+}
+Custom Queries: Using JPQL or native SQL.
+
+java
+Copy code
+@Query("SELECT u FROM User u WHERE u.status = ?1")
+List<User> findByStatus(Integer status);
+
+
+
+
+if (StringUtils.isNotBlank(allRequestParams.get("subcategorylist"))) {
+            subCategorylist = Arrays.stream(allRequestParams.get("subcategorylist").split(",")).map(Long::parseLong).collect(Collectors.toList());
+            flagSubCategoryFilter = CollectionUtils.isEmpty(subCategorylist) ? 0 : 1;
+        }else{
+            subCategorylist = Collections.singletonList(0L);
+        }
+ 
+        List<Long> brandlist;
+        int flagbrandFilter = 0;
+        if (StringUtils.isNotBlank(allRequestParams.get("brandlist"))) {
+            brandlist = Arrays.stream(allRequestParams.get("brandlist").split(",")).map(Long::parseLong).collect(Collectors.toList());
+            flagbrandFilter = CollectionUtils.isEmpty(brandlist) ? 0 : 1;
+        } else {
+            brandlist = Collections.singletonList(0L);
+        }
+
+CompanySettingVo suspendSettingVo = companySettingService.findByCompanyIdAndType(Long.parseLong(session.getAttribute("companyId").toString()), Constant.SUSPENDPRODUCT);
+List<TagMasterVo> tagMasterVos = tagMasterService.getAllTagMasterByCompanyId(companyId);
+List<SalesItemVo> fitIncludedProduct = new ArrayList<>();
+List<SalesItemVo> nonFitIncludedProduct = new ArrayList<>();
+Set<Long> uniqueFitBranchIds = new HashSet<>();
+Set<Long> uniqueNonFitBranchIds = new HashSet<>();
+SalesVo originalSalesVo = new SalesVo();
+originalSalesVo.setSalesId(salesVo.getSalesId());
+originalSalesVo.setSalesItemVos(salesVo.getSalesItemVos());
+originalSalesVo.setAdditionalChargeTotalAmount(salesVo.getAdditionalChargeTotalAmount());
+for (SalesItemVo salesItemVo : salesVo.getSalesItemVos()) {
+ TagMasterVo tagMasterVo = tagMasterVos.stream().filter(tag -> tag.getTagId() == salesItemVo.getTagId()).findFirst().get();
+ ProductVo productVo = new ProductVo();
+ productVo.setTagMasterVo(tagMasterVo);
+ productVo.setProductId(salesItemVo.getProductId());
+ salesItemVo.getProductVarientsVo().setProductVo(productVo);
+ if (tagMasterVo.getIsFit() == 1) {
+     fitIncludedProduct.add(salesItemVo);
+     uniqueFitBranchIds.add(tagMasterVo.getAssignedTo());
+ } else {
+     nonFitIncludedProduct.add(salesItemVo);
+     uniqueNonFitBranchIds.add(tagMasterVo.getAssignedTo());
+ }
+}
+if (!fitIncludedProduct.isEmpty() && fitIncludedProduct != null){
+for (long branchIdd : uniqueFitBranchIds) {
+ List<SalesItemVo> filteredSalesItems = new ArrayList<>();
+ double totalNetAmount = 0 ,totalAmount = 0 ;
+ for (SalesItemVo salesItemVo : fitIncludedProduct){
+     if (salesItemVo.getProductVarientsVo().getProductVo().getTagMasterVo().getAssignedTo() == branchIdd){
+        filteredSalesItems.add(salesItemVo);
+        totalNetAmount += salesItemVo.getNetAmount();
+     }
+ }
