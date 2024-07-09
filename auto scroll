@@ -1,0 +1,43 @@
+function scrollToElement(element) {
+
+            if (element.length) {
+                var container = $('.category-item-img .tab-pane');
+                var containerHeight = container.height();
+                var elementOffsetTop = element.offset().top;
+                var containerOffsetTop = container.offset().top;
+            
+                container.animate({
+                    scrollTop: elementOffsetTop - containerOffsetTop + container.scrollTop() - containerHeight / 2
+                }, 1000);   or 
+
+            $('html, body').animate({
+
+            scrollTop: element.offset().top - window.innerHeight / 2
+
+               }, 1000);
+                
+                element.focus();
+            
+            }
+            
+            }
+
+$('#product_table tbody').on('click', 'tr', function (data) {
+	$("#quantityblock").attr("disabled", false);
+	$("#netamountblock").attr("disabled", false);
+	var rowIndex = $(this).attr('data-sales-item');
+	pvid = $("#productVarientId"+rowIndex).val();
+	$('#v-vegetable-1 ul li').removeClass('active1');
+	var listItemToRemove = document.querySelector('#v-vegetable-1 ul li a[data-product-id="' + pvid + '"]');
+		if (listItemToRemove) {
+			listItemToRemove.parentElement.classList.add('active1');
+		}
+	$("#quantityblock").val($("#spanqty" + rowIndex).html());
+	$("#netamountblock").val($("#spannetammount" + rowIndex).html());
+	GLOBAL_INDEX = rowIndex;
+	setTimeout(function() {
+		$("#quantityblock").select();
+		$("#quantityblock").focus();
+	}, 100);
+	scrollToElement($(".active1"));
+    });
