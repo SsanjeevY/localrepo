@@ -1,0 +1,89 @@
+
+Certainly! Here are various ways you can print the categoryId of each element in the categoryListForPos list, including the ones mentioned earlier:
+
+1. Enhanced for-loop (for-each loop)
+java
+Copy code
+List<CategoryVo> categoryListForPos = categoryService.findAllByDepartmentIdCompanyIdBranchIdAndIsDeleted(companyId, 0, departmentIdList);
+
+// Using enhanced for-loop
+for (CategoryVo category : categoryListForPos) {
+    System.out.println(category.getCategoryId());
+}
+2. Using Java Streams and forEach
+java
+Copy code
+List<CategoryVo> categoryListForPos = categoryService.findAllByDepartmentIdCompanyIdBranchIdAndIsDeleted(companyId, 0, departmentIdList);
+
+// Using Java Streams
+categoryListForPos.stream()
+                  .map(CategoryVo::getCategoryId)
+                  .forEach(System.out::println);
+3. Using Iterator
+java
+Copy code
+List<CategoryVo> categoryListForPos = categoryService.findAllByDepartmentIdCompanyIdBranchIdAndIsDeleted(companyId, 0, departmentIdList);
+Iterator<CategoryVo> iterator = categoryListForPos.iterator();
+
+while (iterator.hasNext()) {
+    CategoryVo category = iterator.next();
+    System.out.println(category.getCategoryId());
+}
+4. Using forEach Loop (Java 8+)
+java
+Copy code
+List<CategoryVo> categoryListForPos = categoryService.findAllByDepartmentIdCompanyIdBranchIdAndIsDeleted(companyId, 0, departmentIdList);
+
+// Using forEach method
+categoryListForPos.forEach(category -> System.out.println(category.getCategoryId()));
+5. For Loop (Traditional)
+java
+Copy code
+List<CategoryVo> categoryListForPos = categoryService.findAllByDepartmentIdCompanyIdBranchIdAndIsDeleted(companyId, 0, departmentIdList);
+
+// Traditional for loop
+for (int i = 0; i < categoryListForPos.size(); i++) {
+    CategoryVo category = categoryListForPos.get(i);
+    System.out.println(category.getCategoryId());
+}
+6. Using forEachOrdered with Stream
+java
+Copy code
+List<CategoryVo> categoryListForPos = categoryService.findAllByDepartmentIdCompanyIdBranchIdAndIsDeleted(companyId, 0, departmentIdList);
+
+// Using forEachOrdered with Stream
+categoryListForPos.stream()
+                  .map(CategoryVo::getCategoryId)
+                  .forEachOrdered(System.out::println);
+7. Using Method Reference in forEach
+java
+Copy code
+List<CategoryVo> categoryListForPos = categoryService.findAllByDepartmentIdCompanyIdBranchIdAndIsDeleted(companyId, 0, departmentIdList);
+
+// Using Method Reference in forEach
+categoryListForPos.forEach(category -> System.out.println(category.getCategoryId()));
+8. Stream with Collector joining
+java
+Copy code
+List<CategoryVo> categoryListForPos = categoryService.findAllByDepartmentIdCompanyIdBranchIdAndIsDeleted(companyId, 0, departmentIdList);
+
+// Stream with Collector joining
+String joinedIds = categoryListForPos.stream()
+                                    .map(CategoryVo::getCategoryId)
+                                    .map(String::valueOf)
+                                    .collect(Collectors.joining(", "));
+System.out.println(joinedIds);
+9. Using ListIterator
+java
+Copy code
+List<CategoryVo> categoryListForPos = categoryService.findAllByDepartmentIdCompanyIdBranchIdAndIsDeleted(companyId, 0, departmentIdList);
+ListIterator<CategoryVo> listIterator = categoryListForPos.listIterator();
+
+while (listIterator.hasNext()) {
+    CategoryVo category = listIterator.next();
+    System.out.println(category.getCategoryId());
+}
+Explanation:
+Enhanced for-loop, Java Streams, Iterator, forEach Loop, Traditional for Loop, forEachOrdered with Stream, Method Reference in forEach, Stream with Collector joining, and ListIterator are different approaches in Java to iterate over a list and print each categoryId.
+
+Each method has its own advantages and is suitable for different scenarios. Choose the method based on readability, performance requirements, and compatibility with existing code practices in your project.
