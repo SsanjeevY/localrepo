@@ -1,0 +1,47 @@
+<div class="dailCode">
+																<span class="small" >2</span>
+																<span class="small" >3</span>
+																<span class="small" >0</span>
+																<span class="small" >1</span>
+																<span class="small" >4</span>
+																<span class="small" >5</span>
+																<span class="small" >6</span>
+																<span class="small" id="dot">.</span>
+																<span class="small" >7</span>
+																<span class="small" >8</span>
+																<span class="small" >9</span>
+																<span class="small">CE</span>
+															</div>
+														 </div>
+
+$('#quantityblock, #netamountblock').focus(function() {
+            currentInputId = this.id;
+        });
+        
+        $('.small').click(function() {
+            var value = $(this).text(); // Get clicked value
+    
+            if (currentInputId === '') {
+                return; // If no input field is focused, do nothing
+            }
+    
+            var $currentInput = $('#' + currentInputId);
+            var currentInput = $currentInput[0];
+    
+            if (value === 'CE') {
+                $currentInput.val('').trigger('keyup');
+                return;
+            }
+    
+            if (currentInput.selectionStart !== currentInput.selectionEnd) {
+                var startPos = currentInput.selectionStart;
+                var endPos = currentInput.selectionEnd;
+                var newValue = $currentInput.val().substring(0, startPos) + value + $currentInput.val().substring(endPos);
+                currentInput.selectionStart = currentInput.selectionEnd = startPos + value.length;
+                $currentInput.val(newValue).trigger('keyup');
+            } else {
+                $currentInput.val($currentInput.val() + value).trigger('keyup');
+            }
+    
+            // $currentInput.focus(); // Ensure input field retains focus after click
+        });
