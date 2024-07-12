@@ -14,34 +14,82 @@
 															</div>
 														 </div>
 
-$('#quantityblock, #netamountblock').focus(function() {
+$(document).ready(function () {
+
+	$(document).on('click', function(event) {
+        if (!$(event.target).closest('.dailCode, .net-amount-class, .flat_discount_touch, .barcode_customer_salesman').length) {
+			qtyNetAmountBlock(GLOBAL_INPUT_TYPE.id);
+        }
+    });
+});
+var  currentInputId ='';
+        $('#quantityblock, #netamountblock,#flat_discount,#searchBarcodeForreturn,#contactVo').focus(function() {
             currentInputId = this.id;
         });
-        
+        $('#quantityblock, #netamountblock,#flat_discount,#searchBarcodeForreturn,#contactVo').on('click', function() {
+            $(this).focus();
+            currentInputId = this.id;
+           
+        });
+        $('#searchBarcodediv').on('click', '#searchBarcode', function() {
+            currentInputId = this.id;
+        });
+        $('.contactVoDiv').on('click', '.select2-selection__rendered', function() {
+            setTimeout(function() {
+                var $dropdown = $('.select2-container--open');
+                var $searchField = $dropdown.find('.select2-search__field');
+                if ($searchField.length > 0) {
+                    $searchField.focus();
+                    currentInputId = $searchField.attr('class');
+                } else {
+                }
+            }, 0);
+        });
+
         $('.small').click(function() {
-            var value = $(this).text(); // Get clicked value
+            var value = $(this).text();
     
             if (currentInputId === '') {
-                return; // If no input field is focused, do nothing
+                return;
             }
     
             var $currentInput = $('#' + currentInputId);
             var currentInput = $currentInput[0];
+            GLOBAL_INPUT_TYPE = currentInput;
     
             if (value === 'CE') {
-                $currentInput.val('').trigger('keyup');
+                $currentInput.val('');
                 return;
             }
-    
             if (currentInput.selectionStart !== currentInput.selectionEnd) {
                 var startPos = currentInput.selectionStart;
                 var endPos = currentInput.selectionEnd;
                 var newValue = $currentInput.val().substring(0, startPos) + value + $currentInput.val().substring(endPos);
                 currentInput.selectionStart = currentInput.selectionEnd = startPos + value.length;
-                $currentInput.val(newValue).trigger('keyup');
+                $currentInput.val(newValue);
             } else {
-                $currentInput.val($currentInput.val() + value).trigger('keyup');
+                $currentInput.val($currentInput.val() + value);
             }
     
             // $currentInput.focus(); // Ensure input field retains focus after click
         });
+        
+        
+
+        function scrollToElement(element) {
+
+            if (element.length) {
+                var container = $('.category-item-img .tab-pane');
+                var containerHeight = container.height();
+                var elementOffsetTop = element.offset().top;
+                var containerOffsetTop = container.offset().top;
+            
+                container.animate({
+                    scrollTop: elementOffsetTop - containerOffsetTop + container.scrollTop() - containerHeight / 2
+                }, 0);
+                
+                element.focus();
+            
+            }
+            
+            }
