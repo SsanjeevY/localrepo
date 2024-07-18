@@ -14,6 +14,27 @@
 															</div>
 														 </div>
 
+//example with step by step for clear the value first selection
+
+var $tendered = $("#tendered");
+var tenderedValue = $tendered.val(); // tenderedValue is "1234"
+var startPos = $tendered[0].selectionStart; // startPos is 1
+var endPos = $tendered[0].selectionEnd; // endPos is 3
+
+// Check if any text is selected
+if (startPos !== endPos) {
+    // Remove the selected text
+    tenderedValue = tenderedValue.slice(0, startPos) + tenderedValue.slice(endPos); // "14"
+    $tendered.val(tenderedValue); // Input field value becomes "14"
+}
+
+// Append the new value
+$tendered.val(tenderedValue + val).trigger("keyup"); // Input field value becomes "145"
+
+$tendered.focus(); // Ensure the input field retains focus
+
+
+
 $(document).ready(function () {
 
 	$(document).on('click', function(event) {
