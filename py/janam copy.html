@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ERP 1-to-1 Chat Integration</title>
+  <script src="https://rocketchat.vasyerp.in/livechat/rocketchat-livechat.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ddp.js/4.0.0/ddp.min.js"></script>
+</head>
+<body>
+  <div id="chat"></div>
+  <script>
+    async function rocketChatLogin(username, password) {
+      const response = await fetch('https://rocketchat.vasyerp.in/api/v1/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user: username, password: password }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Rocket.Chat login failed');
+      }
+
+      const data = await response.json();
+      return data.data;
+    }
+
+    async function createDirectMessage(authToken, userId, recipientUsername) {
+      const response = await fetch('https://rocketchat.vasyerp.in/api/v1/im.create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Token': authToken,
+          'X-User-Id': userId,
+        },
+        body: JSON.stringify({ username: recipientUsername }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create direct message');
+      }
+
+      const data = await response.json();
+      return data;
+    }
+
+    async function initChat(username, password, recipientUsername) {
+      try {
+        const { authToken, userId } = await rocketChatLogin(username, password);
+        const directMessage = await createDirectMessage(authToken, userId, recipientUsername);
+
+        window.RocketChat = function(c) { window.RocketChat._.push(c); };
+        window.RocketChat._ = [];
+        window.RocketChat.authToken = authToken;
+        window.RocketChat.userId = userId;
+
+        (function(w, d, s, u) {
+          const h = d.getElementsByTagName(s)[0], j = d.createElement(s);
+          j.async = true; j.src = u; h.parentNode.insertBefore(j, h);
+        })(window, document, 'script', 'https://rocketchat.vasyerp.in/livechat/rocketchat-livechat.min.js');
+
+        window.RocketChat(function() {
+          this.setTheme({
+            color: '#FF0000',
+            title: 'My ERP Chat',
+          });
+          this.setGuestToken(authToken);
+          this.setCustomField('authToken', authToken);
+          this.setCustomField('userId', userId);
+          this.open();
+        });
+
+        const ddp = new window.DDP({
+          endpoint: "wss://rocketchat.vasyerp.in/websocket",
+          SocketConstructor: WebSocket,
+        });
+
+        ddp.connect();
+
+        ddp.on("connected", () => {
+          console.log("Connected to Rocket.Chat WebSocket");
+
+          ddp.method("login", [{ resume: authToken }], (err, res) => {
+            if (err) {
+              console.error("Login error:", err);
+            } else {
+              console.log("Logged in:", res);
+
+              ddp.subscribe("stream-room-messages", [directMessage.rid, false], (err) => {
+                if (err) {
+                  console.error("Subscription error:", err);
+                }
+              });
+            }
+          });
+        });
+
+        ddp.on("message", (msg) => {
+          console.log("New message:", msg);
+        });
+
+      } catch (error) {
+        console.error('Rocket.Chat initialization failed', error);
+      }
+    }
+
+    // Assuming you have the user's credentials from the ERP session
+    const username = 'dhruvilsheth@vasyerp.com';
+    const password = 'Dhruvil@804';
+    const recipientUsername = 'cloud'; // Replace with actual recipient's username
+    initChat(username, password, recipientUsername);
+  </script>
+</body>
+</html>

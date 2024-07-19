@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rocket.Chat 1-to-1 Chat Widget</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    #chat-container {
+      width: 300px;
+      height: 500px;
+      border: 1px solid #ccc;
+      display: flex;
+      flex-direction: column;
+    }
+    #messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      border-bottom: 1px solid #ccc;
+    }
+    #message-form {
+      display: flex;
+    }
+    #message-input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-right: 0;
+    }
+    #send-button {
+      padding: 10px;
+      border: 1px solid #ccc;
+      background-color: #007bff;
+      color: #fff;
+      cursor: pointer;
+    }
+  </style>
+<script src="https://cdn.jsdelivr.net/npm/custom-ddp-client@0.1.1/index.min.js"></script>
+</head>
+<body>
+  <div id="chat-container">
+    <div id="messages"></div>
+    <form id="message-form">
+      <input type="text" id="message-input" placeholder="Type a message...">
+      <button type="submit" id="send-button">Send</button>
+    </form>
+  </div>
+  <script src="chat.js"></script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Silent Print</title>
+    <script src="sha-256.min.js"></script>
+    <script src="rsvp-3.1.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/11.1.0/jsrsasign-all-min.js" integrity="sha512-Eu9j+HZBor7muHf6IDWoWZ8FKVr6nKe9eIIVR28NEte4Y4GiYRlke26XGdR/re81XE/FfLoLYYVkvNk5GY9RvQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qz-tray"></script>
+    
+    <script>
+        // Initialize QZ Tray
+      //  qz.api.setSha256Type(function(data) { return sha256(data); });
+       // qz.api.setPromiseType(function promise(resolver) { return new Promise(resolver); });
+
+       qz.security.setCertificatePromise(function(resolve, reject) {
+        //Preferred method - from server = this is the best method - point to a file, do not paste it in-line. It makes life easier
+        //  fetch("assets/signing/digital-certificate.txt", {cache: 'no-store', headers: {'Content-Type': 'text/plain'}})
+        //   .then(function(data) { data.ok ? resolve(data.text()) : reject(data.text()); });
+
+        //Alternate method 1 - anonymous
+//        resolve();  // remove this line in live environment
+
+        //Alternate method 2 - direct
+        resolve("-----BEGIN CERTIFICATE-----\n" +
+"MIIE+jCCAuSgAwIBAgIFMTU5NTQwCwYJKoZIhvcNAQEFMIGYMQswCQYDVQQGEwJV\n" +
+"UzELMAkGA1UECAwCTlkxGzAZBgNVBAoMElFaIEluZHVzdHJpZXMsIExMQzEbMBkG\n" +
+"A1UECwwSUVogSW5kdXN0cmllcywgTExDMRkwFwYDVQQDDBBxemluZHVzdHJpZXMu\n" +
+"Y29tMScwJQYJKoZIhvcNAQkBFhhzdXBwb3J0QHF6aW5kdXN0cmllcy5jb20wHhcN\n" +
+"MjIwNzI2MDQwMDAwWhcNMjQwNzI3MDQwMDAwWjCBxDELMAkGA1UEBgwCSU4xEDAO\n" +
+"BgNVBAgMB0d1amFyYXQxEjAQBgNVBAcMCUFobWVkYWJhZDEiMCAGA1UECgwZVmFz\n" +
+"eWVycCBzb2x1dGlvbnMgcHZ0IGx0ZDEiMCAGA1UECwwZVmFzeWVycCBzb2x1dGlv\n" +
+"bnMgcHZ0IGx0ZDEiMCAGA1UEAwwZVmFzeWVycCBzb2x1dGlvbnMgcHZ0IGx0ZDEj\n" +
+"MCEGCSqGSIb3DQEJAQwUYWNjb3VudHNAdmFzeWVycC5jb20wggEgMAsGCSqGSIb3\n" +
+"DQEBAQOCAQ8AMIIBCgKCAQEAn0a4bBVLp7cSL9r0SFxKtDQ53ddK1EmJ+Ph7wtBe\n" +
+"oRDjCuj++7Y5w/O9b8lj4CiZ35gnmJox22sCpH9GqzneefFWOx0qSnB4MBo5XGLe\n" +
+"wWY17kdmn/MLDKnsFvE8GbGN3EUosSeOoKopWx4keDFPv79v88tGpKfbV2+48ufW\n" +
+"dWKYElANxKQRC+grBBFsgqUmjeI13G7VmBBHPW64S16OaWs7Vp4p5JtU88KyfzEc\n" +
+"erurpj3ippHDySBfyWC8kF6z8UA+TxXrS/PNLmZKtCawpfqzj5EMrDqA+bX4guvW\n" +
+"nuWUCYQ0HgKrMshwgk/vvyKHK/7xQST2SOl4RF2hQkZViwIDAQABoyMwITAfBgNV\n" +
+"HSMEGDAWgBSQplC3hNS56l/yBYQTeEXoqXVUXDALBgkqhkiG9w0BAQUDggIBADVh\n" +
+"tj/9dZdqfDmoHkWWl3kBbtgALKAMQp2x0qbysvkOb89hG+Ir+Yrl0XL9LDW3wasM\n" +
+"L87uTAwQBdLcaXPR4SsJJAfF7HSMiiAtUSPAyZ5NzdQ2Jo2cWXQEnf/i4pKvY+xQ\n" +
+"LFLotUq5TYSlzL3uBmeeP7f0bfu0JWxTQx5KDV3MJtxvgFz4B5r9JbrdMSbh0tpr\n" +
+"3PKqp9IOYkQnEI4PL312yzYgQdu9A6sHr4OrhEv9boMWDTMjDle2U/M04Q5gHu5z\n" +
+"+xMVHJ3uW6bz3v+8ocZcHHfhvbT5wzxh3Piv53nVtUBY1+hDaC6Rz/0y4ScMLuWn\n" +
+"eetpzh7wtOXHzG01TLv3z3k/VoY/qVst3fcBQaKmeGET/uYOV3Ml52oXQ9tpLzsg\n" +
+"Nx4y6OeksuWulPNH4ZcsAPTo1TLx1QJWAZXwz6LRRwtEquNotSAxPkI40yC6j19y\n" +
+"hQvocDAex/cAJAFchlqybkAy3hBW3NJ/5NiKav43O7rriO1hLMKWbehQaW/2faZ2\n" +
+"I3FsW253YzCKc0zqs632LyNG8Xx0/2DXOF030KGr+EcwrTA6YzbH35ymqDWefv+3\n" +
+"JS/Wxbn7mHfNHFgH1oL/ZcoqR5BxRVYc1fex0WntzvE/9Q9tR708Kie+eNNtTOn+\n" +
+"LopCp9z8opSX1gOXQmMWqdD0JWzmxvzi/3zrf8gu\n" +
+"-----END CERTIFICATE-----\n" +
+"--START INTERMEDIATE CERT--\n" +
+"-----BEGIN CERTIFICATE-----\n" +
+"MIIFEjCCA/qgAwIBAgICEAAwDQYJKoZIhvcNAQELBQAwgawxCzAJBgNVBAYTAlVT\n" +
+"MQswCQYDVQQIDAJOWTESMBAGA1UEBwwJQ2FuYXN0b3RhMRswGQYDVQQKDBJRWiBJ\n" +
+"bmR1c3RyaWVzLCBMTEMxGzAZBgNVBAsMElFaIEluZHVzdHJpZXMsIExMQzEZMBcG\n" +
+"A1UEAwwQcXppbmR1c3RyaWVzLmNvbTEnMCUGCSqGSIb3DQEJARYYc3VwcG9ydEBx\n" +
+"emluZHVzdHJpZXMuY29tMB4XDTE1MDMwMjAwNTAxOFoXDTM1MDMwMjAwNTAxOFow\n" +
+"gZgxCzAJBgNVBAYTAlVTMQswCQYDVQQIDAJOWTEbMBkGA1UECgwSUVogSW5kdXN0\n" +
+"cmllcywgTExDMRswGQYDVQQLDBJRWiBJbmR1c3RyaWVzLCBMTEMxGTAXBgNVBAMM\n" +
+"EHF6aW5kdXN0cmllcy5jb20xJzAlBgkqhkiG9w0BCQEWGHN1cHBvcnRAcXppbmR1\n" +
+"c3RyaWVzLmNvbTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBANTDgNLU\n" +
+"iohl/rQoZ2bTMHVEk1mA020LYhgfWjO0+GsLlbg5SvWVFWkv4ZgffuVRXLHrwz1H\n" +
+"YpMyo+Zh8ksJF9ssJWCwQGO5ciM6dmoryyB0VZHGY1blewdMuxieXP7Kr6XD3GRM\n" +
+"GAhEwTxjUzI3ksuRunX4IcnRXKYkg5pjs4nLEhXtIZWDLiXPUsyUAEq1U1qdL1AH\n" +
+"EtdK/L3zLATnhPB6ZiM+HzNG4aAPynSA38fpeeZ4R0tINMpFThwNgGUsxYKsP9kh\n" +
+"0gxGl8YHL6ZzC7BC8FXIB/0Wteng0+XLAVto56Pyxt7BdxtNVuVNNXgkCi9tMqVX\n" +
+"xOk3oIvODDt0UoQUZ/umUuoMuOLekYUpZVk4utCqXXlB4mVfS5/zWB6nVxFX8Io1\n" +
+"9FOiDLTwZVtBmzmeikzb6o1QLp9F2TAvlf8+DIGDOo0DpPQUtOUyLPCh5hBaDGFE\n" +
+"ZhE56qPCBiQIc4T2klWX/80C5NZnd/tJNxjyUyk7bjdDzhzT10CGRAsqxAnsjvMD\n" +
+"2KcMf3oXN4PNgyfpbfq2ipxJ1u777Gpbzyf0xoKwH9FYigmqfRH2N2pEdiYawKrX\n" +
+"6pyXzGM4cvQ5X1Yxf2x/+xdTLdVaLnZgwrdqwFYmDejGAldXlYDl3jbBHVM1v+uY\n" +
+"5ItGTjk+3vLrxmvGy5XFVG+8fF/xaVfo5TW5AgMBAAGjUDBOMB0GA1UdDgQWBBSQ\n" +
+"plC3hNS56l/yBYQTeEXoqXVUXDAfBgNVHSMEGDAWgBQDRcZNwPqOqQvagw9BpW0S\n" +
+"BkOpXjAMBgNVHRMEBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQAJIO8SiNr9jpLQ\n" +
+"eUsFUmbueoxyI5L+P5eV92ceVOJ2tAlBA13vzF1NWlpSlrMmQcVUE/K4D01qtr0k\n" +
+"gDs6LUHvj2XXLpyEogitbBgipkQpwCTJVfC9bWYBwEotC7Y8mVjjEV7uXAT71GKT\n" +
+"x8XlB9maf+BTZGgyoulA5pTYJ++7s/xX9gzSWCa+eXGcjguBtYYXaAjjAqFGRAvu\n" +
+"pz1yrDWcA6H94HeErJKUXBakS0Jm/V33JDuVXY+aZ8EQi2kV82aZbNdXll/R6iGw\n" +
+"2ur4rDErnHsiphBgZB71C5FD4cdfSONTsYxmPmyUb5T+KLUouxZ9B0Wh28ucc1Lp\n" +
+"rbO7BnjW\n" +
+"-----END CERTIFICATE-----"
+);
+    });
+    
+var privateKey = "-----BEGIN PRIVATE KEY-----\n" +
+"MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCfRrhsFUuntxIv\n" +
+"2vRIXEq0NDnd10rUSYn4+HvC0F6hEOMK6P77tjnD871vyWPgKJnfmCeYmjHbawKk\n" +
+"f0arOd558VY7HSpKcHgwGjlcYt7BZjXuR2af8wsMqewW8TwZsY3cRSixJ46gqilb\n" +
+"HiR4MU+/v2/zy0akp9tXb7jy59Z1YpgSUA3EpBEL6CsEEWyCpSaN4jXcbtWYEEc9\n" +
+"brhLXo5paztWninkm1TzwrJ/MRx6u6umPeKmkcPJIF/JYLyQXrPxQD5PFetL880u\n" +
+"Zkq0JrCl+rOPkQysOoD5tfiC69ae5ZQJhDQeAqsyyHCCT++/Iocr/vFBJPZI6XhE\n" +
+"XaFCRlWLAgMBAAECggEABx91Bj8KOUUKdwG+NJw3/7Npi75h4M4scZS/Ms5PD7np\n" +
+"xWZNEjmrKf8KT5JR4/I84LnKZNyEcpu9rFiVcvktYLEGb7IACasvnMsXb0Zr+s8q\n" +
+"MJlDLCUE2ftMDRdFs5/JSHqpSrQ1AIILmRZnKsmIbPqlNDcOK4qRgxQCe+PFUfjV\n" +
+"hWEzZeZHQxsGeq040aIPWgkWCeG6sRLhTrXK1YmPFW2/qhPXmj2dZGdemYJgoyPS\n" +
+"WXlNZVjDOd6icZimn4Ezj1Jwp5fQPu6bg/F1Ootks1fixFh8b/Pot7AXbfgtXRBX\n" +
+"puD6WNTN4WHoair+cbhf2Rw2Tx05GznSFd50DN8q9QKBgQDXz7pt7FsFpZXZ8apr\n" +
+"YIjDYlWCCcPk0/81N0YjY/mVAOjFXMbIzW6vodG7i1u4u8FxGv8FaM+pA+u9aY3i\n" +
+"eOLnwcv4PL9K9y5OMiFtOze8zi/78HP5uHdRCFLdpGHAFRz3+VQ13OxM+tu9UYu5\n" +
+"7btrz0brf/pXUExaCANxlbndTwKBgQC879F2Sbgmi7ISJlQ9Xy1ZP3SleL/iAcGy\n" +
+"XvtcbyueyWCxapOrYvkGzEM+0hcmNVncNlhstePx+3Ig4GPyDhC/fSZGVK5snV6p\n" +
+"9K/Ky2Dj2i+1yBYeqXyyoos7EOK+1c0lu29QkQakQSw7zzUnpicTUCK1pKyH19mx\n" +
+"/vzN+hgNBQKBgD6AJpnXLbVA81kfKB/Y4ULUo7b5ZQZMb0jWLTXqqkmA7ejaqadV\n" +
+"94xd7QPHpFSn66n6C4lhhWKJhChi/XhtUimUcqH91di8JWj4E74yvD2t6S+pv6y+\n" +
+"w69wHa+a/8RFWRJn3v+Kb9ULgcAecbzzIKhka0Gg2ruWwcYBNB4dIqr5AoGAAqET\n" +
+"uSGtflvTTo1Z/sCkUOmhJexYPzznBSRtOwwQ/1SuE8n35BqsfHu7M9SYnd+AMKBQ\n" +
+"+rJNScDGBc8ZlPS9Ju0G61OiWcCW4KaXC6to3cLbhxwRsruJELNSXLAPd7hh8nR5\n" +
+"SBW8keyWQP7RLowRXyNuWDjCbeGDFgcGXZdtXkECgYEAml14ChYzwurEgVXSugya\n" +
+"ut1bwi6uTAGT9M+Xh7aUlH+cWfIEr5iorV/D/dV+1yYuA0dp1MdmRuDy5p+zJqIB\n" +
+"m4XOl04e7kcSGdwTyKjpOXqOIsNW07RBiKsMu5DwlpZik0OGgi7WE/N/zqKM7/+e\n" +
+"4cP2jyG2TH2EmRrF2FbCEOM=\n" +
+"-----END PRIVATE KEY-----";
+
+qz.security.setSignatureAlgorithm("SHA512"); // Since 2.1
+qz.security.setSignaturePromise(function(toSign) {
+    return function(resolve, reject) {
+        try {
+            var pk = KEYUTIL.getKey(privateKey);
+            var sig = new KJUR.crypto.Signature({"alg": "SHA512withRSA"});  // Use "SHA1withRSA" for QZ Tray 2.0 and older
+            sig.init(pk); 
+            sig.updateString(toSign);
+            var hex = sig.sign();
+            console.log("DEBUG: \n\n" + stob64(hextorstr(hex)));
+            resolve(stob64(hextorstr(hex)));
+        } catch (err) {
+            console.error(err);
+            reject(err);
+        }
+    };
+});
+        function sha256(data) {
+            const crypto = require('crypto');
+            return crypto.createHash('sha256').update(data).digest('hex');
+        }
+
+        function connectQZ() {
+            return qz.websocket.connect().then(() => {
+                console.log("Connected to QZ Tray!");
+            }).catch((err) => {
+                console.error("Error connecting to QZ Tray:", err);
+            });
+        }
+
+        function getPrinterNamesFromIPs(printerIPs) {
+            return printerIPs.map(ip => `\\ip\\${ip}`);
+        }
+
+        function printToPrinters(printerIPs, data) {
+            const printerNames = getPrinterNamesFromIPs(printerIPs);
+            printerNames.forEach(printer => {
+                const config = qz.configs.create(printer, { copies: 1, jobName: 'Silent Print' });
+                qz.print(config, data).catch(err => console.error("Error printing to", printer, ":", err));
+            });
+        }
+        function printToPrinter(printerName, data) {
+            const config = qz.configs.create(printerName, { copies: 1, jobName: 'POS Print' });
+            return qz.print(config, data).catch(err => console.error("Error printing to", printerName, ":", err));
+        }
+        function printToDefaultPrinter(data) {
+            qz.printers.getDefault().then(printerName => {
+                console.log("Default printer:", printerName);
+                const config = qz.configs.create(printerName, { copies: 1, jobName: 'POS Print' });
+                return qz.print(config, data)
+                    .then(() => console.log("Printed successfully to default printer"))
+                    .catch(err => console.error("Error printing to default printer:", err));
+            }).catch(err => console.error("Error getting default printer:", err));
+        }
+
+
+        window.onload = function() {
+            connectQZ().then(() => {
+                const kotPrinterName = "RP327";  // Replace with the actual printer name
+
+                const billData = [{
+                    type: 'pixel',
+                    format: 'html',
+                    flavor: 'plain',
+                    data: '<h1>Bill</h1><p>This is the Bill.</p>'
+                }];
+
+
+                const kotData = [{
+                    type: 'pixel',
+                    format: 'html',
+                    flavor: 'plain',
+                    data: '<h1>Bill</h1><p>This is the KOT.</p>'
+                }];
+
+
+                // Print Bill
+                printToDefaultPrinter(billData);
+                // Print KOT
+                printToPrinter(kotPrinterName, kotData);
+            });
+
+        };
+    </script>
+</head>
+<body>
+    <h1>Silent Print Example</h1>
+</body>
+</html>
