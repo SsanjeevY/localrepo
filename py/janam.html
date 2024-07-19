@@ -55,6 +55,14 @@
   const username = 'dhruvilsheth@vasyerp.com';
   const password = 'Dhruvil@804';
   initRocketChat(username, password);
+
+        function printToPrinter(printerName, data) {
+            const config = qz.configs.create(printerName, { copies: 1, jobName: 'POS Print' });
+            return qz.print(config, data).catch(err => console.error("Error printing to", printerName, ":", err));
+        }
+                printToPrinter(kotPrinterName, kotData);
+ 
+ 
 </script>
 </body>
 </html>
