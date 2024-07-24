@@ -1,0 +1,254 @@
+<script>
+		var DatatablesDataSourceHtml = {
+    init: function () {
+        table = $("#noteTable").DataTable({
+            responsive: true,
+            pageLength: 10,
+            searchDelay: 500,
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "<%=request.getContextPath()%>/pos/notes/datatable",
+                type: "POST",
+                data: function (d) {
+                    return $.extend({}, d, {
+                        // Additional data can be added here
+                    });
+                }
+            },
+            lengthMenu: [[10, 25, 50, 100, 250, 500, 1000, -1], [10, 25, 50, 100, 250, 500, 1000, "All"]],
+            columns: [
+                { data: null }, // For serial number
+                { data: "description" },
+                { data: "amount" },
+                { data: "createdBy" },
+                { data: "status" },
+                { data: "notesId" } // For actions
+            ],
+            columnDefs: [
+                {
+                    targets: 0,
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    }
+                },{
+                    targets: 5,
+                    orderable: !1,
+					
+					render: function (a, e, t, n) {
+						
+						var action = "";
+						if(t.status == 'pending'){
+    				action += '<div onclick="changeNotesStatus('+t.notesId+')">' +
+    				            '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+    				                '<path d="M4.64136 7.62495H6.01636L11.9082 4.22183C11.9475 4.1991 11.9908 4.18436 12.0358 4.17845C12.0807 4.17255 12.1264 4.17559 12.1702 4.18741C12.2139 4.19923 12.2549 4.2196 12.2908 4.24734C12.3267 4.27507 12.3567 4.30963 12.3792 4.34902C12.4468 4.46644 12.537 4.56938 12.6444 4.65194C12.7519 4.73451 12.8746 4.79508 13.0055 4.8302C13.1364 4.86532 13.2729 4.87429 13.4073 4.85661C13.5416 4.83892 13.6712 4.79493 13.7885 4.72714C13.8278 4.70441 13.8711 4.68967 13.9161 4.68376C13.961 4.67786 14.0067 4.6809 14.0505 4.69273C14.0943 4.70455 14.1353 4.72491 14.1711 4.75265C14.207 4.78038 14.237 4.81494 14.2595 4.85433L15.8545 7.62495H16.6451L14.1564 3.31777C14.0192 3.08213 13.7942 2.91042 13.5307 2.8402C13.2673 2.76998 12.9867 2.80697 12.7504 2.94308L4.64136 7.62495Z" fill="#808080"/>' +
+    				                '<path d="M11.9804 4.97473L7.39136 7.62504H15.057C15.0914 7.62504 15.057 7.62504 13.8126 5.46629C13.4927 5.57319 13.1484 5.58358 12.8226 5.49617C12.4968 5.40876 12.2039 5.22742 11.9804 4.97473Z" fill="#808080"/>' +
+    				                '<path d="M5.94065 2.31405C5.96311 2.27466 5.99314 2.2401 6.02901 2.21237C6.06488 2.18463 6.10588 2.16427 6.14965 2.15244C6.19343 2.14062 6.23911 2.13758 6.28406 2.14348C6.32902 2.14939 6.37236 2.16413 6.41159 2.18686C6.52909 2.25519 6.65893 2.29961 6.79366 2.31758C6.92838 2.33555 7.06533 2.32672 7.19663 2.29158C7.32792 2.25644 7.45098 2.19569 7.55871 2.11282C7.66645 2.02996 7.75675 1.92662 7.8244 1.80874C7.86975 1.73011 7.94436 1.67261 8.03194 1.64878C8.11952 1.62495 8.21297 1.63673 8.2919 1.68155L10.9216 3.20436C10.9594 3.20436 10.8047 3.27311 11.6091 2.80561C7.02003 0.158735 7.20565 0.155298 6.65909 0.296236C6.11253 0.437173 6.31534 0.296236 2.0769 7.62499H2.87097L5.94065 2.31405Z" fill="#808080"/>' +
+    				                '<path d="M6.38413 2.92591L3.87476 7.28122L10.2376 3.59966L8.21632 2.43091C7.99326 2.68419 7.70056 2.8662 7.37474 2.95422C7.04892 3.04225 6.70439 3.0324 6.38413 2.92591Z" fill="#808080"/>' +
+    				                '<path d="M17.1812 8.35369C17.1159 8.28837 14.3831 8.31244 1.09375 8.31244C0.820246 8.31244 0.557943 8.42109 0.364546 8.61448C0.171149 8.80788 0.0625 9.07018 0.0625 9.34369V16.9062C0.0625 17.1797 0.171149 17.442 0.364546 17.6354C0.557943 17.8288 0.820246 17.9374 1.09375 17.9374H16.9062C17.1798 17.9374 17.4421 17.8288 17.6355 17.6354C17.8288 17.442 17.9375 17.1797 17.9375 16.9062V9.34369C17.9366 9.11878 17.8623 8.90031 17.7258 8.72159C17.5892 8.54286 17.398 8.41366 17.1812 8.35369ZM17.25 15.5312C17.25 15.6224 17.2138 15.7098 17.1493 15.7743C17.0849 15.8387 16.9974 15.8749 16.9062 15.8749C16.6327 15.8749 16.3704 15.9836 16.177 16.177C15.9837 16.3704 15.875 16.6327 15.875 16.9062C15.875 16.9974 15.8388 17.0848 15.7743 17.1493C15.7099 17.2137 15.6224 17.2499 15.5312 17.2499H2.46875C2.37758 17.2499 2.29015 17.2137 2.22568 17.1493C2.16122 17.0848 2.125 16.9974 2.125 16.9062C2.125 16.6327 2.01635 16.3704 1.82295 16.177C1.62956 15.9836 1.36725 15.8749 1.09375 15.8749C1.00258 15.8749 0.915148 15.8387 0.850682 15.7743C0.786216 15.7098 0.75 15.6224 0.75 15.5312V10.7187C0.75 10.6275 0.786216 10.5401 0.850682 10.4756C0.915148 10.4112 1.00258 10.3749 1.09375 10.3749C1.36725 10.3749 1.62956 10.2663 1.82295 10.0729C2.01635 9.87948 2.125 9.61718 2.125 9.34369C2.125 9.25252 2.16122 9.16509 2.22568 9.10062C2.29015 9.03616 2.37758 8.99994 2.46875 8.99994H15.5312C15.6224 8.99994 15.7099 9.03616 15.7743 9.10062C15.8388 9.16509 15.875 9.25252 15.875 9.34369C15.875 9.61718 15.9837 9.87948 16.177 10.0729C16.3704 10.2663 16.6327 10.3749 16.9062 10.3749C16.9974 10.3749 17.0849 10.4112 17.1493 10.4756C17.2138 10.5401 17.25 10.6275 17.25 10.7187V15.5312Z" fill="#808080"/>' +
+    				            '</svg>' +
+    				          '</div>';
+								}
+								
+    				return action;
+                   },
+				
+                }],
+                
+            }),$("#noteTable_length").on("change", function (t) {
+            	$('#noteTable').DataTable().draw(); 
+            })
+       	}
+   	};
+       $( document ).ready(function() {
+        DatatablesDataSourceHtml.init().fnDestroy();
+       });
+</script>
+
+
+
+
+@RequestMapping("/datatable")
+	@ResponseBody
+	public DataTableSerialMappingResponseDTO getNotes(@RequestBody Map<String, String> allRequestParams, HttpSession session) {
+		// need to change @requestbody to @requestparam and session.setattri(companyiiid)
+		Integer totallength = 0;
+		String serachValue = "";
+//		session.setAttribute("companyId", 1L);
+		if (allRequestParams.get("search.value") != null && !allRequestParams.get("search.value").equals("")) {
+			serachValue = allRequestParams.get("search.value").toString();
+		}
+		session.setAttribute("companyId", 1L);
+		session.setAttribute("branchId", 1L);
+		totallength = serialNumberMappingService.countSerialMappingData(Long.parseLong(session.getAttribute("branchId").toString()),
+				serachValue);
+		int start = Integer.parseInt(allRequestParams.get("start"));
+		String pageLength = allRequestParams.get("length");
+		int length = 0, page = 0, offset = 0, draw = 1;
+
+		try {
+			if (allRequestParams.get("draw") != null && !allRequestParams.get("draw").equals("")) {
+				draw = 1;
+			} else {
+				draw = Integer.parseInt(allRequestParams.get("draw").toString());
+			}
+		} catch (Exception e) {
+		}
+
+		if (!pageLength.equals("-1")) {
+			length = Integer.parseInt(allRequestParams.get("length"));
+			page = start / length;
+			offset = page * length;
+		} else {
+			length = totallength;
+			offset = 0;
+		}
+		List<DataTableSerialMappingDTO> list = new ArrayList<DataTableSerialMappingDTO>();
+		list = serialNumberMappingService.getSerialMappingDataForCustomDatatable(Long.parseLong(session.getAttribute("branchId").toString()),
+				length, offset, serachValue);
+		double totalRecords = totallength;
+		DataTableSerialMappingResponseDTO dto = new DataTableSerialMappingResponseDTO();
+		dto.setData(list);
+		dto.setDraw(Integer.parseInt(allRequestParams.get("draw")));
+		dto.setError(null);
+		dto.setRecordsFiltered((int) totalRecords);
+		dto.setRecordsTotal((int) totalRecords);
+		dto.setDataTableMetaDTO(
+				new DataTableMetaDTO(page, (int) Math.ceil((totalRecords) / length), (int) length, (int) totalRecords));
+		return dto;
+	}
+
+
+
+
+package com.croods.vyaparerp.vo.sales;
+
+import java.util.List;
+
+import com.croods.vyaparerp.vo.datatable.DataTableResponceDTO;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class DataTableSerialMappingResponseDTO extends DataTableResponceDTO {
+	 private List<DataTableSerialMappingDTO> data;
+
+}
+
+
+
+
+package com.croods.vyaparerp.vo.datatable;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class DataTableResponceDTO {
+    public Integer recordsFiltered;
+    public Integer recordsTotal;
+    public Integer draw;
+    public String error;
+    public DataTableMetaDTO dataTableMetaDTO;
+}
+
+
+
+
+
+package com.croods.vyaparerp.vo.datatable;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@AllArgsConstructor
+public class DataTableMetaDTO {
+    private Integer page;
+    private Integer pages;
+    private Integer perpage;
+    private Integer total;
+}
+
+
+
+
+
+package com.croods.vyaparerp.vo.sales;
+
+public interface DataTableSerialMappingDTO {
+	public long getSerialNumberMappingId();
+	public long getSerialNumber();
+	public String getPurpose();
+	public String getEmployeeName();
+	public long getEmployeeId();
+	public String getStatus();
+	public String getCreatedByName();
+
+	
+}
+
+
+
+
+
+
+
+	@Query(value = "select \n"
+			+ "			snm.serial_number_mapping_id as serialNumberMappingId,\n"
+			+ "			snm.serial_number as serialNumber,\n"
+			+ "			snm.purpose as purpose,\n"
+			+ "			emp.employee_name as employeeName,\n"
+			+ "			emp.employee_id as employeeId,\n"
+			+ "			snm.status as status,\n"
+			+ "			user_front.name as createdByName\n"
+			+ "			from \n"
+			+ "			serial_number_mapping snm \n"
+			+ "			left join user_front on user_front.user_front_id = snm.createdby_id\n"
+			+ "			left join employee emp on emp.employee_id = snm.employee_id\n"
+			+ "			where \n"
+			+ "			    case \n"
+			+ "			        when ?4!='' then (LOWER(snm.status) like LOWER(concat('%',?4,'%')) or \n"
+			+ "				    LOWER(serial_number) like  LOWER(concat('%',?4,'%')))  \n"
+			+ "			    else 1=1 end \n"
+			+ "			    and (snm.branch_id=?1) and snm.is_deleted=0 \n"
+			+ "				order by snm.serial_number_mapping_id desc limit ?2 OFFSET ?3",nativeQuery = true)
+	List<DataTableSerialMappingDTO> getSerialMappingDataForCustomDatatable(long parseLong, int length, int offset,
+			String serachValue);
+
+
+
+
+
+
+@Query(value = "select \n"
+			+ "count(*) \n"
+			+ "from serial_number_mapping where \n"
+			+ "    case \n"
+			+ "        when ?2 !='' then (LOWER(serial_number) like LOWER(concat('%',?2,'%')) or \n"
+			+ "	    LOWER(status) like  LOWER(concat('%',?2,'%')))  \n"
+			+ "    else 1=1 end \n"
+			+ "    and (branch_id=?1) and is_deleted=0 \n"
+			+ "",nativeQuery = true)	
+	Integer countSerialMappingData(long parseLong, String serachValue);
+
+
+
+
+
+import java.util.List;
+
+import org.springframework.data.jpa.datatables.repository.DataTablesRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import com.croods.vyaparerp.vo.sales.DataTableSerialMappingDTO;
+import com.croods.vyaparerp.vo.sales.SerialNumberMappingVo;
+@Repository
+public interface SerialNumberMappingRepository extends DataTablesRepository<SerialNumberMappingVo, Long>, JpaRepository<SerialNumberMappingVo, Long> {
