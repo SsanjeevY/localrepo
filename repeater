@@ -1,0 +1,76 @@
+<table class="table createMaterialWastageTable">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Product Name</th>
+            <th>Quantity</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody data-material-wastage-list="">
+        <!-- Template Row for Adding New Entries -->
+        <tr data-material-wastage-item="template" class="d-none">
+            <td class="index"></td>
+            <td>
+                <input type="text" class="form-control w-100" id="productName{index}" placeholder="Product Name">
+            </td>
+            <td>
+                <input type="number" class="form-control w-100" id="quantity{index}" placeholder="Quantity">
+            </td>
+            <td>
+                <i class="fa fa-trash" style="font-size: 18px; color: #4e4e4e; cursor: pointer;"></i>
+            </td>
+        </tr>
+        <!-- Existing Rows -->
+        <!-- Example rows will be cloned from the template -->
+    </tbody>
+    <tfoot>
+        <tr>
+            <th colspan="4">
+                <button type="button" class="btn btn-primary" onclick="addRow()">Add Row</button>
+            </th>
+        </tr>
+    </tfoot>
+</table>
+
+
+$(document).ready(function() {
+    let rowIndex = 1; // Initial row index
+
+    function updateIndexes() {
+        // Update indexes for each row
+        $('tbody[data-material-wastage-list] tr').each(function(index) {
+            // Update index in visible rows
+            $(this).find('.index').text(index + 1);
+            $(this).find('input').each(function() {
+                // Update ID of input fields
+                const newId = `${$(this).attr('id').split('{index}')[0]}${index + 1}`;
+                $(this).attr('id', newId);
+            });
+        });
+    }
+
+    function addRow() {
+        // Clone the template row
+        const $templateRow = $('tbody[data-material-wastage-list] tr[data-material-wastage-item="template"]').clone();
+
+        // Remove the d-none class to make it visible
+        $templateRow.removeClass('d-none');
+
+        // Append the new row to the tbody
+        $('tbody[data-material-wastage-list]').append($templateRow);
+
+        // Update indexes after adding new row
+        updateIndexes();
+    }
+
+    // Event delegation for dynamically added remove buttons
+    $(document).on('click', 'i.fa-trash', function() {
+        $(this).closest('tr').remove();
+        updateIndexes(); // Update indexes after removing a row
+    });
+
+    // Initial index update
+    updateIndexes();
+});
+
