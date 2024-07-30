@@ -1,64 +1,879 @@
- var rowIndex = 0;
- addRowForMaterialWastage();
-        function addRowForMaterialWastage() {
-        const $templateRow = $('tbody[data-material-wastage-list] tr[data-material-wastage-item="template"]').clone();
-        $templateRow.removeClass('d-none');
-        $templateRow.find("input[type='text'], input[type='number'], button, table, span, a, textarea, div").each(function () {
-            let n = $(this).attr("id");
-            n ? $(this).attr("id", n.replace(/{index}/g, rowIndex)) : "";
 
-            n = $(this).attr("name");
-            n ? $(this).attr("name", n.replace(/{index}/g, rowIndex)) : "";
 
-            n = $(this).attr("data-target");
-            n ? $(this).attr("data-target", n.replace(/{index}/g, rowIndex)) : "";
-
-            $(this).attr("onclick") ? $(this).attr("onclick", $(this).attr("onclick").replace(/{index}/g, rowIndex)) : "";
-            $(this).attr("onchange") ? $(this).attr("onchange", $(this).attr("onchange").replace(/{index}/g, rowIndex)) : "";
-            $(this).attr("oninput") ? $(this).attr("oninput", $(this).attr("oninput").replace(/{index}/g, rowIndex)) : "";
-        });
-        $('tbody[data-material-wastage-list]').append($templateRow);
-        rowIndex++;
-        $templateRow.find('.index').text(rowIndex);
-    }
-
-$(document).on('click', 'i.fa-trash', function() {
-        $(this).closest('tr').remove();
-        // No need to update indexes here
-    });
-
- <table class="table createMaterialWastageTable">
+<!-- Modal -->
+<div class="modal fade iscon" id="materialWastageModel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel"><span class="materialwastageTitle">Material Wastage</span><span class="createMaterialWastageTitle m--hide"><i class="fa fa-arrow-left back-arrow"></i> Create Material Wastage</span></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+            <div class="col-12 materialWastageListDiv">
+                <div class="row">
+                    <div class="col-12 text-right mb-2">
+                        <button class="btn btn-sm btn-primary btn-width createMaterialWastageBtn" id="createMaterialWastageBtn">Create</button>
+                    </div>
+                    <div class="col-12" style="height: 159px; overflow-y: scroll;margin-bottom: 20px;">
+                        <table class="table table-sm table-striped table-bordered table-hover table-checkable w-100"   id="materialWastageTable">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th style="width: 5%;text-align: center;">#</th>
+                                    <th style="width: 25%;">Consumption No.</th>
+                                    <th style="width: 25%;">Total Product</th>
+                                    <th style="width: 20%;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- <tr>
+                                    <td style="width: 5%;text-align: center;">1</td>
+                                    <td style="width: 25%;">ABC12345 </td>
+                                    <td style="width: 25%;">10</td>
+                                    <td style="width: 20%;text-align: center;">
+                                        <div class="d-flex justify-content-center">
+                                            <div class="mr-2">
+                                                <svg width="27" height="17" viewBox="0 0 27 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M13.367 0.323486C8.25917 0.323486 3.62715 3.11802 0.209179 7.65707C-0.0697265 8.02895 -0.0697265 8.54848 0.209179 8.92035C3.62715 13.4649 8.25917 16.2594 13.367 16.2594C18.4748 16.2594 23.1068 13.4649 26.5248 8.92582C26.8037 8.55395 26.8037 8.03442 26.5248 7.66254C23.1068 3.11802 18.4748 0.323486 13.367 0.323486ZM13.7334 13.9024C10.3428 14.1157 7.54277 11.3211 7.75605 7.92504C7.93105 5.12504 10.2006 2.85552 13.0006 2.68052C16.3912 2.46723 19.1912 5.26176 18.9779 8.65785C18.7974 11.4524 16.5279 13.7219 13.7334 13.9024ZM13.5639 11.3102C11.7373 11.425 10.2279 9.92113 10.3482 8.09457C10.4412 6.5852 11.6662 5.36567 13.1756 5.26723C15.0021 5.15239 16.5115 6.65629 16.3912 8.48285C16.2928 9.9977 15.0678 11.2172 13.5639 11.3102Z" fill="#808080"/>
+                                                </svg>   
+                                            </div>
+                                            <div>
+                                                <svg width="19" height="24" viewBox="0 0 19 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M4.97819 14.7935C4.76352 14.7935 4.61886 14.8145 4.54419 14.8355V16.2098C4.63286 16.2308 4.74369 16.2366 4.89652 16.2366C5.45535 16.2366 5.79952 15.9543 5.79952 15.4771C5.79952 15.0501 5.50319 14.7935 4.97819 14.7935ZM9.04633 14.8075C8.813 14.8075 8.66133 14.8285 8.5715 14.8495V17.8945C8.66133 17.9155 8.806 17.9155 8.93666 17.9155C9.88983 17.9225 10.5105 17.3975 10.5105 16.2868C10.5175 15.3185 9.95166 14.8075 9.04633 14.8075Z" fill="#808080"/>
+                                                    <path d="M11.6667 0H2.33333C1.7145 0 1.121 0.245828 0.683421 0.683421C0.245828 1.121 0 1.7145 0 2.33333V21C0 21.6188 0.245828 22.2123 0.683421 22.6499C1.121 23.0875 1.7145 23.3333 2.33333 23.3333H16.3333C16.9521 23.3333 17.5456 23.0875 17.9832 22.6499C18.4208 22.2123 18.6667 21.6188 18.6667 21V6.99999L11.6667 0ZM6.41433 16.555C6.05383 16.8933 5.52183 17.045 4.90233 17.045C4.78221 17.0463 4.66215 17.0393 4.543 17.024V18.6877H3.5V14.0957C3.97069 14.0254 4.4463 13.9935 4.92216 14C5.572 14 6.034 14.1237 6.34549 14.3722C6.64183 14.6078 6.84249 14.994 6.84249 15.449C6.84133 15.9063 6.68966 16.2925 6.41433 16.555ZM10.8558 18.1358C10.3658 18.543 9.62033 18.7367 8.70916 18.7367C8.16316 18.7367 7.77699 18.7017 7.51449 18.6667V14.0968C7.98536 14.0281 8.46078 13.9957 8.93666 14C9.81983 14 10.3938 14.1587 10.8418 14.497C11.326 14.8563 11.6293 15.4292 11.6293 16.2517C11.6293 17.1418 11.3038 17.7567 10.8558 18.1358ZM15.1667 14.8983H13.3793V15.9612H15.05V16.8175H13.3793V18.6888H12.3223V14.035H15.1667V14.8983ZM11.6667 8.16666H10.5V2.33333L16.3333 8.16666H11.6667Z" fill="#808080"/>
+                                                </svg> 
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 5%;text-align: center;">2</td>
+                                    <td style="width: 25%;">ABC12345 </td>
+                                    <td style="width: 25%;">10</td>
+                                    <td style="width: 20%;text-align: center;">
+                                        <div class="d-flex justify-content-center">
+                                            <div class="mr-2">
+                                                <svg width="27" height="17" viewBox="0 0 27 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M13.367 0.323486C8.25917 0.323486 3.62715 3.11802 0.209179 7.65707C-0.0697265 8.02895 -0.0697265 8.54848 0.209179 8.92035C3.62715 13.4649 8.25917 16.2594 13.367 16.2594C18.4748 16.2594 23.1068 13.4649 26.5248 8.92582C26.8037 8.55395 26.8037 8.03442 26.5248 7.66254C23.1068 3.11802 18.4748 0.323486 13.367 0.323486ZM13.7334 13.9024C10.3428 14.1157 7.54277 11.3211 7.75605 7.92504C7.93105 5.12504 10.2006 2.85552 13.0006 2.68052C16.3912 2.46723 19.1912 5.26176 18.9779 8.65785C18.7974 11.4524 16.5279 13.7219 13.7334 13.9024ZM13.5639 11.3102C11.7373 11.425 10.2279 9.92113 10.3482 8.09457C10.4412 6.5852 11.6662 5.36567 13.1756 5.26723C15.0021 5.15239 16.5115 6.65629 16.3912 8.48285C16.2928 9.9977 15.0678 11.2172 13.5639 11.3102Z" fill="#808080"/>
+                                                </svg>   
+                                            </div>
+                                            <div>
+                                                <svg width="19" height="24" viewBox="0 0 19 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M4.97819 14.7935C4.76352 14.7935 4.61886 14.8145 4.54419 14.8355V16.2098C4.63286 16.2308 4.74369 16.2366 4.89652 16.2366C5.45535 16.2366 5.79952 15.9543 5.79952 15.4771C5.79952 15.0501 5.50319 14.7935 4.97819 14.7935ZM9.04633 14.8075C8.813 14.8075 8.66133 14.8285 8.5715 14.8495V17.8945C8.66133 17.9155 8.806 17.9155 8.93666 17.9155C9.88983 17.9225 10.5105 17.3975 10.5105 16.2868C10.5175 15.3185 9.95166 14.8075 9.04633 14.8075Z" fill="#808080"/>
+                                                    <path d="M11.6667 0H2.33333C1.7145 0 1.121 0.245828 0.683421 0.683421C0.245828 1.121 0 1.7145 0 2.33333V21C0 21.6188 0.245828 22.2123 0.683421 22.6499C1.121 23.0875 1.7145 23.3333 2.33333 23.3333H16.3333C16.9521 23.3333 17.5456 23.0875 17.9832 22.6499C18.4208 22.2123 18.6667 21.6188 18.6667 21V6.99999L11.6667 0ZM6.41433 16.555C6.05383 16.8933 5.52183 17.045 4.90233 17.045C4.78221 17.0463 4.66215 17.0393 4.543 17.024V18.6877H3.5V14.0957C3.97069 14.0254 4.4463 13.9935 4.92216 14C5.572 14 6.034 14.1237 6.34549 14.3722C6.64183 14.6078 6.84249 14.994 6.84249 15.449C6.84133 15.9063 6.68966 16.2925 6.41433 16.555ZM10.8558 18.1358C10.3658 18.543 9.62033 18.7367 8.70916 18.7367C8.16316 18.7367 7.77699 18.7017 7.51449 18.6667V14.0968C7.98536 14.0281 8.46078 13.9957 8.93666 14C9.81983 14 10.3938 14.1587 10.8418 14.497C11.326 14.8563 11.6293 15.4292 11.6293 16.2517C11.6293 17.1418 11.3038 17.7567 10.8558 18.1358ZM15.1667 14.8983H13.3793V15.9612H15.05V16.8175H13.3793V18.6888H12.3223V14.035H15.1667V14.8983ZM11.6667 8.16666H10.5V2.33333L16.3333 8.16666H11.6667Z" fill="#808080"/>
+                                                </svg> 
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 5%;text-align: center;">3</td>
+                                    <td style="width: 25%;">ABC12345 </td>
+                                    <td style="width: 25%;">10</td>
+                                    <td style="width: 20%;text-align: center;">
+                                        <div class="d-flex justify-content-center">
+                                            <div class="mr-2">
+                                                <svg width="27" height="17" viewBox="0 0 27 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M13.367 0.323486C8.25917 0.323486 3.62715 3.11802 0.209179 7.65707C-0.0697265 8.02895 -0.0697265 8.54848 0.209179 8.92035C3.62715 13.4649 8.25917 16.2594 13.367 16.2594C18.4748 16.2594 23.1068 13.4649 26.5248 8.92582C26.8037 8.55395 26.8037 8.03442 26.5248 7.66254C23.1068 3.11802 18.4748 0.323486 13.367 0.323486ZM13.7334 13.9024C10.3428 14.1157 7.54277 11.3211 7.75605 7.92504C7.93105 5.12504 10.2006 2.85552 13.0006 2.68052C16.3912 2.46723 19.1912 5.26176 18.9779 8.65785C18.7974 11.4524 16.5279 13.7219 13.7334 13.9024ZM13.5639 11.3102C11.7373 11.425 10.2279 9.92113 10.3482 8.09457C10.4412 6.5852 11.6662 5.36567 13.1756 5.26723C15.0021 5.15239 16.5115 6.65629 16.3912 8.48285C16.2928 9.9977 15.0678 11.2172 13.5639 11.3102Z" fill="#808080"/>
+                                                </svg>   
+                                            </div>
+                                            <div>
+                                                <svg width="19" height="24" viewBox="0 0 19 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M4.97819 14.7935C4.76352 14.7935 4.61886 14.8145 4.54419 14.8355V16.2098C4.63286 16.2308 4.74369 16.2366 4.89652 16.2366C5.45535 16.2366 5.79952 15.9543 5.79952 15.4771C5.79952 15.0501 5.50319 14.7935 4.97819 14.7935ZM9.04633 14.8075C8.813 14.8075 8.66133 14.8285 8.5715 14.8495V17.8945C8.66133 17.9155 8.806 17.9155 8.93666 17.9155C9.88983 17.9225 10.5105 17.3975 10.5105 16.2868C10.5175 15.3185 9.95166 14.8075 9.04633 14.8075Z" fill="#808080"/>
+                                                    <path d="M11.6667 0H2.33333C1.7145 0 1.121 0.245828 0.683421 0.683421C0.245828 1.121 0 1.7145 0 2.33333V21C0 21.6188 0.245828 22.2123 0.683421 22.6499C1.121 23.0875 1.7145 23.3333 2.33333 23.3333H16.3333C16.9521 23.3333 17.5456 23.0875 17.9832 22.6499C18.4208 22.2123 18.6667 21.6188 18.6667 21V6.99999L11.6667 0ZM6.41433 16.555C6.05383 16.8933 5.52183 17.045 4.90233 17.045C4.78221 17.0463 4.66215 17.0393 4.543 17.024V18.6877H3.5V14.0957C3.97069 14.0254 4.4463 13.9935 4.92216 14C5.572 14 6.034 14.1237 6.34549 14.3722C6.64183 14.6078 6.84249 14.994 6.84249 15.449C6.84133 15.9063 6.68966 16.2925 6.41433 16.555ZM10.8558 18.1358C10.3658 18.543 9.62033 18.7367 8.70916 18.7367C8.16316 18.7367 7.77699 18.7017 7.51449 18.6667V14.0968C7.98536 14.0281 8.46078 13.9957 8.93666 14C9.81983 14 10.3938 14.1587 10.8418 14.497C11.326 14.8563 11.6293 15.4292 11.6293 16.2517C11.6293 17.1418 11.3038 17.7567 10.8558 18.1358ZM15.1667 14.8983H13.3793V15.9612H15.05V16.8175H13.3793V18.6888H12.3223V14.035H15.1667V14.8983ZM11.6667 8.16666H10.5V2.33333L16.3333 8.16666H11.6667Z" fill="#808080"/>
+                                                </svg> 
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr> -->
+                               
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 createMaterialWastageDiv m--hide">
+                <form action="" id="materialWastageForm">
+                    <div class="row">
+                    <div class="col-12" style="height: 230px; overflow-y: scroll;">
+                        <input type="hidden" value="0" name="totalAmount" id="totalAmountForMaterial">
+                        <table class="table createMaterialWastageTable" id="createMaterialWastageTable">
+                            <thead>
+                                <tr>
                                     <th>Product Name</th>
                                     <th>Quantity</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody data-material-wastage-list="">
-                                <tr data-material-wastage-item="template" class="d-none">
-                                    <td class="index"></td>
+                                <tr data-material-wastage-item="template" class="m--hide">
+                                    <td class="text-center m--hide" data-item-index></td>
                                     <td>
-                                        <input type="text" class="form-control w-100" id="productName{index}" name="productName[{index}]" placeholder="Product Name">
+                                        <input type="text" class="form-control w-100 search-barcode-material" id="searchBarcodeId{index}" name="searchBarcodeName[{index}]" placeholder="Product Name" readonly="readonly" data-item-name>
                                     </td>
                                     <td>
-                                        <input type="number" class="form-control w-100" id="quantity{index}" name="quantity[{index}]" placeholder="Quantity">
+                                        <input type="number" class="form-control w-100" id="qtyForMaterial{index}" name="materialConsumptionItemVos[{index}].qty" placeholder="" value="" onchange="setAmountForMaterial()" onkeydown="check(event, this)" data-creditnoteqty="0" data-item-availableqty="0">
+                                        <input type="hidden" class="form-control form-control-sm text-right" data-decimal="" name="materialConsumptionItemVos[{index}].price" readonly="readonly" id="priceForMaterial{index}" placeholder="Price" value="0" onkeydown="check(event, this)"/>  
+                                        <input type="hidden" class="form-control form-control-sm text-right" data-decimal="" data-item-total="" name="materialConsumptionItemVos[{index}].total" readonly="readonly" id="totalForMaterial{index}" placeholder="Total" value="0"/>
+                                        <input type="hidden" name="materialConsumptionItemVos[{index}].productVarientsVo.productVarientId" id="productVarientIdForMaterial{index}" value=""/>
+                                        <input type="hidden" name="materialConsumptionItemVos[{index}].batchNo" id="batchNoForMaterial{index}" value=""/> 
+                                        <input type="hidden" name="materialConsumptionItemVos[{index}].batchId" id="batchIdForMaterial{index}" value=""/>
                                     </td>
                                     <td>
-                                        <i class="fa fa-trash" style="font-size: 18px; color: #4e4e4e; cursor: pointer;"></i>
+                                        <i class="fa fa-trash" style="font-size: 18px; color: #4e4e4e; cursor: pointer;" onclick="removeRow(this)"></i>
                                     </td>
                                 </tr>
                             </tbody>
                             <tfoot>
                                 <tr>
                                     <th colspan="4">
-                                        <button type="button" class="btn btn-primary" onclick="addRowForMaterialWastage()">Add Row</button>
+                                        <div class="form-group mb-0" id="searchBarcodeDivMaterial" style="width:50%">
+                                             <input type="text" class="form-control form-control-sm" id="productIdBaracodeMaterial"
+                                              placeholder="Search product & barcode">
+                                        </div>
                                     </th>
                                 </tr>
                             </tfoot>
                         </table>
+                        
+                        
+                        
+                        
+                    </div>
+                    <!-- <div class="mt-3 col-12">
+                        <a class="linkBtn " href="#">Add More Product</a>
+                    </div> -->
+                </div>
+            </form>
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer materialWastageModelFooter m--hide" style="border: none;">
+        <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> -->
+        <button type="button" class="btn btn-primary btn-width" id="saveMaterialWastage">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    
+    $( document ).ready(function() {
+        // var rowIndex = 0; 
+        // addRowForMaterialWastage(); 
+
+        // $('#noteModal').on('shown.bs.modal', function () {
+        //     $("#noteModal thead th").trigger("click")
+        // });
+
+        $(".createMaterialWastageBtn").click(function(){
+            $(".materialWastageListDiv").addClass("m--hide");
+            $(".materialwastageTitle").addClass("m--hide");
+            $(".createMaterialWastageDiv").removeClass("m--hide");
+            $(".materialWastageModelFooter").removeClass("m--hide");
+            $(".createMaterialWastageTitle").removeClass("m--hide");
+        });
+        $(".back-arrow").click(function(){
+            $(".materialWastageListDiv").removeClass("m--hide");
+            $(".materialwastageTitle").removeClass("m--hide");
+            $(".createMaterialWastageDiv").addClass("m--hide");
+            $(".materialWastageModelFooter").addClass("m--hide");
+            $(".createMaterialWastageTitle").addClass("m--hide");
+        });
+        // $(".saveNoteBtn").click(function(){
+        //     $(".noteListDiv").removeClass("m--hide");
+        //     $(".createNoteDiv").addClass("m--hide");
+        // });
+
+        // $(".saveNotePayBtn").click(function(){
+        //     $(".noteListDiv").removeClass("m--hide");
+        //     $(".createNoteDiv").addClass("m--hide");
+        // });
+        $('#materialWastageModel').on('hidden.bs.modal', function () {
+            $(".materialWastageListDiv").removeClass("m--hide");
+            $(".materialwastageTitle").removeClass("m--hide");
+            $(".createMaterialWastageDiv").addClass("m--hide");
+            $(".materialWastageModelFooter").addClass("m--hide");
+            $(".createMaterialWastageTitle").addClass("m--hide");
+        });
+        // $("#purposeMap").select2();
+    });
+    $("#saveMaterialWastage").click(function(){
+          var values = $("#materialWastageForm").serializeArray();
+
+          values = values.filter(function(item) {
+          return !item.name.includes('{index}');
+          });
+   
+          var filteredValues = $.param(values);
+                $.ajax(
+                    {
+                        url: "/materialconsumption/savefrompos",
+                        type: "post",
+                        data: filteredValues,
+                        success: function (res) {
+                            toastr.success("Submitted Successfully");
+                            $("#materialWastageModel").modal('hide');
+                            document.getElementById("materialWastageForm").reset();
+                            var row = '';
+                            // $("#m_table_1").dataTable().fnDestroy();
+                            // DatatablesDataSourceHtml.init();
+                            // $('#noteTable').DataTable().draw(); 
+
+                        },
+                        error: function (xhr, status, error) {
+                            console.log(xhr.responseText);
+                        }
+                    });
+        });
+</script>
 
 
+var rowIndexMaterial = 0;
+const ARITHMETIC_OPERATIONS = {
+    SUMMATION: 'summation',
+    SUBTRACTION: 'subtraction',
+    MULTIPLICATION: 'multiplication',
+    DIVISION: 'division'
+};
+
+function addRowForMaterialWastage() {
+    var $templateRow = $('#createMaterialWastageTable tbody[data-material-wastage-list] tr[data-material-wastage-item="template"]')
+        .clone().removeClass('m--hide').removeAttr('data-material-wastage-item');
+    $templateRow.find("input[type='text'], input[type='number']").each(function () {
+        var idAttr = $(this).attr("id");
+        if (idAttr) {
+            $(this).attr("id", idAttr.replace(/{index}/g, rowIndexMaterial));
+        }
+        var nameAttr = $(this).attr("name");
+        if (nameAttr) {
+            $(this).attr("name", nameAttr.replace(/{index}/g, rowIndexMaterial));
+        }
+    });
+    $templateRow.find("[onclick]").each(function () {
+        var onClickAttr = $(this).attr("onclick");
+        if (onClickAttr) {
+            $(this).attr("onclick", onClickAttr.replace(/{index}/g, rowIndexMaterial));
+        }
+    });
+    $templateRow.find("[data-item-index]").text(rowIndexMaterial);
+    $('#createMaterialWastageTable tbody[data-material-wastage-list]').append($templateRow);
+    rowIndexMaterial++;
+}
+function removeRow(buttonElement) {
+    if (buttonElement) {
+        var $row = $(buttonElement).closest('tr');
+        $row.remove();
+        // reindexRows();
+    }
+}
+$(document).on("keyup", '#productIdBaracodeMaterial', function (e) {
+   var keys = [37, 38, 39, 40, undefined];
+
+   if (keys.includes(e.which)) {
+       return false;
+   }
+   if (e.which == 13) {
+       e.preventDefault();
+        getProductInfoByBarcodeForMaterial();
+        $("#productIdBaracode").val("");
+       $('#searchBarcodeDivMaterial').text("");
+       $('#searchBarcodeDivMaterial').html('<input type="text" class="form-control form-control-sm" id="productIdBaracodeMaterial" placeholder="Search product & barcode"  value="">');
+   } else {
+       checkEnterFlag = true;
+       if ($("#productIdBaracodeMaterial").val() == "" || $("#productIdBaracodeMaterial").val() == null) {
+           checkEnterFlag = true;
+           checkSuggestionFlag = true;
+       }
+       clearTimeout(timer);
+        getProductSearchResultByDbQuery();
+   }
+});
+function getProductSearchResultByDbQuery() {
+    
+	if ($("#productIdBaracodeMaterial").val() != "" && $("#productIdBaracodeMaterial").val() != null) {
+		$.post("/product/materialconsumption/json", {
+			q: $("#productIdBaracodeMaterial").val()
+		})
+			.done(function(data) {
+				commonProductDataRender(data.items);
+			});
+	}
+
+}
+function commonProductDataRender(data) {
+	console.log("product selected");
+	checkSuggestionFlag = true;
+	//var data = JSON.parse(data);
+	var jaon = data;
+	var a = $("#productIdBaracodeMaterial").val();
+	$('#searchBarcodeDivMaterial').text("");
+	$('#searchBarcodeDivMaterial').html('<input type="text" class="form-control form-control-sm" id="productIdBaracodeMaterial" placeholder="Search product & barcode"  value="' + a + '">');
+	var n = new Bloodhound({
+		datumTokenizer: Bloodhound.tokenizers.obj.whitespace("text"),
+		queryTokenizer: Bloodhound.tokenizers.whitespace,
+		local: jaon,
+		limit: 10
+	});
+	$("#productIdBaracodeMaterial").typeahead({
+		hint: !0,
+		highlight: !0,
+		minLength: 1,
+		limit: 2
+	}, {
+		name: "Product",
+		display: "text",
+		limit: 500,
+		source: n,
+		templates: {
+			empty: ['<div class="m-demo-icon"><div class="m-demo-icon__preview"><span class=""></span></div><div class="m-demo-icon__class">Product Not Found !!!</div></div>'],
+			suggestion: function(data) {
+				return "<div>" + data.text + "&nbsp;&nbsp;</div>"
+			}
+		}
+	}).on('typeahead:selected', function(event, selection) {
+		$('#productIdBaracodeMaterial').val('nigam');
+		getProductInfoByProductVarientIdForMaterial(selection.id);
+	}).bind('typeahead:cursorchange', function(ev, suggestion) {
+		checkEnterFlag = false;
+		console.log("Slection Change")
+	});
+	$('#productIdBaracodeMaterial').focus().val('').val(a);
+}
+function getProductInfoByProductVarientIdForMaterial(productvariantId) {
+    var productvariantId = productvariantId,
+        type, salesId;
+        if (productvariantId!=undefined && productvariantId!=null && productvariantId != "") {
+            var URL;
+                URL = "/product/sales/" + productvariantId + "/json";
+            $.post(URL, {}, function (data, status) {
+                if (status == 'success') {
+                    if (data == "") {
+                        showToast("this barcode is not available", barcode)
+                    } else {
+                        
+                            if (data.productVo.active == 1) {
+                                showToast(data.productVo.name + " product is Deactive");
+                            } else {
+								 var flag_for_expiry=0;
+										// if(expiry == 1 && $("#consumptionType").val()=='Expired'){
+										// 	 dataNew = [];
+										// 	 for (var u = 0; u < data.stockMasterVos.length; u++) {
+										// 	  var startDate = moment(moment(data.stockMasterVos[u].expirationDate).format('DD-MM-YYYY'), "DD-MM-YYYY");
+										// 		var endDate =moment(moment(SERVERDATE).format('DD/MM/YYYY'),"DD-MM-YYYY");
+										// 		if(endDate.diff(startDate, 'days')>=1){console.log("herree")
+										// 			 dataNew.push(data.stockMasterVos[u]);
+										// 			 flag_for_expiry=1;
+										// 		}
+													
+										// 	}
+											
+										// 	if(flag_for_expiry==1){
+										// 	  data.stockMasterVos = [];
+								        //         for (var k = 0; k < dataNew.length; k++) {
+								        //             data.stockMasterVos.push(dataNew[k]);
+								        //         }
+							            //     }else{
+										// 		showToast("Expired batches are not available for this product")
+										// 	        return false;
+										// 	}
+							                
+							            //     if ( data.stockMasterVos == null ||  data.stockMasterVos.length <= 0) {
+										// 		if(flag_for_expiry==1){
+										// 	        showToast("Expired batches are not available for this product")
+										// 	        return false;
+										//         }
+										//     }
+										    
+											
+										// }
+										
+                                if (checkBatchIsAvailable(data)) {
+                                    setBatchOptionToSelectBoxForMaterial(data);
+                                    if (checkItHasOneBatch(data)) {
+                                       
+                                        if($("#batchNoForMaterial").find('option:selected').attr("data-isexpirymanage")==1){
+										 var startDate = moment(moment($("#batchNo").find('option:selected').attr("data-expiry")).format('DD-MM-YYYY'), "DD-MM-YYYY");
+				    					 var endDate =moment(moment(SERVERDATE).format('DD/MM/YYYY'),"DD-MM-YYYY");
+				    					 if(endDate.diff(startDate, 'days')>=1){
+											Swal.fire({
+								                title: "Are you sure?",
+								                text: "You want To Add expired product",
+								                type: "warning",
+								                showCancelButton: !0,
+								                confirmButtonText: "Yes, Add it!"
+								            	}).then(function (e) {
+									                if(e.value){
+                                                        getLastSalesPriceAndSetProductForMaterial(data);
+													}else{
+														
+				                   						 $("#select_batch_modal_for_material").modal("hide");
+													}
+												});
+										 }else{
+                                            getLastSalesPriceAndSetProductForMaterial(data);
+										 }
+										}else{
+                                            getLastSalesPriceAndSetProductForMaterial(data);
+				                    	}
+				                                        
+                                    } else {
+                                        let promise = new Promise(function (resolve, reject) {
+                                            $('#select_batch_modal_for_material').modal('show');
+                                            $("#saveBatchForMaterial").click(function () {
+                                              
+                                                if($("#batchNoForMaterial").find('option:selected').attr("data-isexpirymanage")==1){
+												 var startDate = moment(moment($("#batchNoForMaterial").find('option:selected').attr("data-expiry")).format('DD-MM-YYYY'), "DD-MM-YYYY");
+						    					 var endDate =moment(moment(SERVERDATE).format('DD/MM/YYYY'),"DD-MM-YYYY");
+						    					 if(endDate.diff(startDate, 'days')>=1){
+													Swal.fire({
+										                title: "Are you sure?",
+										                text: "You want To Add expired product",
+										                type: "warning",
+										                showCancelButton: !0,
+										                confirmButtonText: "Yes, Add it!"
+										            	}).then(function (e) {
+											                if(e.value){
+																  resolve();
+                                               					 $("#select_batch_modal_for_material").modal("hide");
+															}else{
+																
+						                   						 $("#select_batch_modal_for_material").modal("hide");
+															}
+														});
+												 }else{
+													  resolve();
+                                                		$("#select_batch_modal_for_material").modal("hide");
+												 }
+												}else{
+						                    		  resolve();
+                                                		$("#select_batch_modal_for_material").modal("hide");
+						                    	}
+                                                
+                                            });
+                                            $("#cancelBatchForMaterial").click(function () {
+                                                reject();
+                                                $("#select_batch_modal_for_material").modal("hide");
+                                            });
+                                        });
+                                        promise.then(function () {
+                                            getLastSalesPriceAndSetProductForMaterial(data);
+                                        });
+                                    }
+                                }
+                            }
+                    }
+                    $("#productIdBaracodeMaterial").val("");
+                    $("#productIdBaracodeMaterial").focus();
+                }
+            });
+        }
+    return false;
+}
+function setBatchOptionToSelectBoxForMaterial(data) {
+    $("#batchNoForMaterial").html("");
+    data.stockMasterVos.forEach(function (obj) {
+			var newOption = "<option value='" + obj.batchNo + "' data-batchId="+obj.stockId+" data-saleprice=" + obj.mrp + "  data-isExpiryManage="+data.productVo.isExpiryManage+" >LC : "+obj.landingCost+" - MRP : "+obj.mrp+" - SP : "+obj.sellingPrice+"</option>"
+	        	$("#batchNoForMaterial").append(newOption).trigger('change');	
+    });
+    
+    $("#batchNoForMaterial").select2({
+				   templateResult: function (data, container) {
+				    if (data.element) {console.log("callllher"+$(data.element).attr("class"))
+				      $(container).addClass($(data.element).attr("class"));
+				    }
+				    return data.text;
+				  }
+			  });
+}
+function getLastSalesPriceAndSetProductForMaterial(data) {
+    console.log("last sales");
+        var batchNo = $("#batchNoForMaterial").val();
+        var selectedBatchId = $("#batchNoForMaterial").find('option:selected').attr("data-batchId")
+        var saleQuantity = 1;
+        var $salesItem = $("#createMaterialWastageTable").find("[data-material-wastage-item]").not(".m--hide")
+        $salesItem.each(function () {
+        
+            if (data.productVarientId == $(this).find("input[id*='productVarientIdForMaterial']").val() && selectedBatchId == $(this).find("input[id*='batchIdForMaterial']").val()) {
+                var sales_item = $(this).attr("data-material-wastage-item");
+                saleQuantity = Number($("#qtyForMaterial" + sales_item).val()) + 1;
+            }
+        });
+        var availableQty = data.availableQty;
+        var purchasePrice = data.purchasePrice;
+        $.each(data.stockMasterVos, function (key, value) {
+            if (value.stockId == selectedBatchId) {
+                availableQty = value.quantity;
+                console.log(availableQty);
+                purchasePrice = value.purchasePrice;
+            }
+        });
+        if(parseFloat(availableQty)>0 && parseFloat(availableQty)<1){
+                saleQuantity=0.1;
+            }
+        var result = isNegativeStock(availableQty, saleQuantity);
+        console.log("Fire From varient" + result)
+        $('#searchBarcodeDivMaterial').text("");
+        $('#searchBarcodeDivMaterial').html('<input type="text" class="form-control form-control-sm" id="productIdBaracodeMaterial" placeholder="Search product & barcode"  value="">');
+        if (result) {
+            showToast("Your current quantity is " + availableQty + ". please update it");
+        } else {
+            setProductByBarcodeForMaterial(data);
+        }
+    }
+    function setProductByBarcodeForMaterial(data) {
+        var $salesItem = $("#createMaterialWastageTable").find("[data-material-wastage-item]").not(".m--hide");
+        var repeat = false;
+        var selectedBatchNo = $("#batchNoForMaterial").val();
+        var selectedBatchId = $("#batchNoForMaterial").find('option:selected').attr("data-batchId");
+        var availableQty = data.availableQty;
+        var landingcost = 0;
+        $.each(data.stockMasterVos, function (key, value) {
+            if (value.stockId == selectedBatchId) {
+                availableQty = value.quantity;
+                landingcost = value.landingCost;
+            }
+        });
+        
+        $salesItem.each(function () {
+            if (data.productVarientId == $(this).find("input[id*='productVarientIdForMaterial']").val() && selectedBatchId == $(this).find("input[id*='batchIdForMaterial']").val()) {
+                $(this).find("[data-item-availableqty]").attr("data-item-availableqty", availableQty);
+                var sales_item = $(this).attr("data-material-wastage-item");
+                var qty = $("#qtyForMaterial" + sales_item).val();
+                if (!qty) {
+                    qty = 0;
+                }
+                $("#qtyForMaterial" + sales_item).val(parseInt(qty) + 1);
+                setAmount();
+                repeat = true;
+            }
+        });
+        if (repeat == false) {
+            var name =data.productVo.name + " " + (data.varientName == null ? "" : data.varientName),
+                salesItemIndex = 0,
+                mrp = 0,
+                price = 0,
+                productVariantId = data.productVarientId,
+                 decimal = data.productVo.unitOfMeasurementVo.noOfDecimalPlaces,
+                batchNo = $("#batchNoForMaterial").val(),
+            element = $("#batchNoForMaterial").find('option:selected'),
+                batchId = element.attr("data-batchId");
+                 qty = 1, productId = data.productVo.productId;
+           console.log("mrp--->"+data.mrp);
+           console.log("landingcost--->"+landingcost);
+            mrp = parseFloat(data.mrp);
+            price = parseFloat(landingcost);
+           
+             if(availableQty<1){
+                qty=1;
+                 qty = qty.toString();
+                
+                 qty=qty.slice(0, (qty.indexOf(".")) + (decimal+1)); //With 3 exposing the hundredths place
+                Number(qty);
+               qty=  parseFloat(qty)
+                
+            }
+            if(isNaN(qty)){
+                qty=1;	
+            }
+            
+            var mainIndex = rowIndexMaterial;
+            var selector = rowIndexMaterial;
+            var $salesItemTemplate = $('#createMaterialWastageTable tbody[data-material-wastage-list] tr[data-material-wastage-item="template"]')
+                .clone()
+                .removeClass('m--hide')
+                .removeAttr('data-material-wastage-item');
+            $salesItemTemplate.attr("data-material-wastage-item", mainIndex).removeClass("m--hide");
+            $salesItemTemplate.find("[data-item-name]").val(name).end()
+                .find("[name='materialConsumptionItemVos[{index}].productVarientsVo.productVarientId']").val(productVariantId).end()
+                .find("[name='materialConsumptionItemVos[{index}].qty']").val(qty).end()
+                .find("[name='materialConsumptionItemVos[{index}].price']").val(price).end()
+                .find("[name='materialConsumptionItemVos[{index}].qty']").attr("data-item-availableqty", availableQty).end()
+                .find("[name='materialConsumptionItemVos[{index}].batchNo']").val(batchNo).end()
+                .find("[name='materialConsumptionItemVos[{index}].batchId']").val(batchId).end();
+                $salesItemTemplate.find("input[type='text'], input[type='number'], input[type='hidden']").each(function () {
+                var idAttr = $(this).attr("id");
+                if (idAttr) {
+                    $(this).attr("id", idAttr.replace(/{index}/g, rowIndexMaterial));
+                }
+                var nameAttr = $(this).attr("name");
+                if (nameAttr) {
+                    $(this).attr("name", nameAttr.replace(/{index}/g, rowIndexMaterial));
+                }
+            });
+            $salesItemTemplate.find("[onclick]").each(function () {
+                var onClickAttr = $(this).attr("onclick");
+                if (onClickAttr) {
+                    $(this).attr("onclick", onClickAttr.replace(/{index}/g, rowIndexMaterial));
+                }
+            });
+            $salesItemTemplate.find("[data-item-index]").text(rowIndexMaterial);
+            $('#createMaterialWastageTable tbody[data-material-wastage-list]').append($salesItemTemplate);
+            rowIndexMaterial++;
+            
+            
+        
+            setAmountForMaterial()
+            // setSrNo();
+            // setTimeout(function () {
+            //     $("#qty" + (index - 1)).focus();
+            // }, 100);
+        }
+    }
+    function setAmountForMaterial() {
+        var $salesItem = $("#createMaterialWastageTable").find("[data-material-wastage-item]").not(".m--hide"),
+            qty=0.0,selector=0,totalQty=0.0;
+        $salesItem.each(function () {
+        var subTotal = 0.0;
+         /*if ($(this).find("input[id*='qty']").val() == "") {
+                qty = parseFloat("0.0");
+            } else {
+                qty = parseFloat($(this).find("input[id*='qty']").val());
+            }*/
+             if ($(this).find("input[id*='priceForMaterial']").val() == "") {
+                price = parseFloat("0.0");
+            } else {
+                price = parseFloat($(this).find("input[id*='priceForMaterial']").val());
+            }
+            qty = parseFloat($(this).find("input[id*='qtyForMaterial']").val());
+            totalQty = performArithmetic(ARITHMETIC_OPERATIONS.SUMMATION,totalQty,qty);
+            subTotal = price * qty;
+             $(this).find("input[id*='totalForMaterial']").val(subTotal);
+            selector=selector+1;
+        });
+        // $("#totalQty").html(totalQty);
+        setSubTotalForMaterial();
+    }
+    function setSubTotalForMaterial() {
+        var $salesItem = $("#createMaterialWastageTable").find("[data-material-wastage-item]").not(".m--hide"),
+            subTotal = 0.0;
+        $salesItem.each(function () {
+            subTotal += parseFloat($(this).find("[data-item-total]").val());
+        });
+        $("#totalAmountForMaterial").val(subTotal.toFixed("${sessionScope.decimalPoint}"));
+        //setAllTotal();
+    }
+    performArithmetic = (operation, strNum1, strNum2) => {
+        const factor = 10000; // Adjust the factor based on your desired precision
+    
+        // Convert string inputs to numbers
+        let num1 = parseFloat(strNum1);
+        let num2 = parseFloat(strNum2);
+    
+        // Check if inputs are valid numbers
+        if (isNaN(num1)) num1 = 0;
+        if (isNaN(num2)) num2 = 0;
+    
+        // Convert numbers to integers with desired precision
+        const int1 = Math.round(num1 * factor);
+        const int2 = Math.round(num2 * factor);
+    
+        let resultInt;
+    
+        // Perform arithmetic operation based on the given operation
+        if (operation === ARITHMETIC_OPERATIONS.SUMMATION) {
+            resultInt = (int1 + int2)/factor;
+        } else if (operation === ARITHMETIC_OPERATIONS.SUBTRACTION) {
+            resultInt = (int1 - int2)/factor;
+        } else if (operation === ARITHMETIC_OPERATIONS.MULTIPLICATION) {
+            resultInt = int1 * int2/ Math.pow(factor, 2);
+        } else if (operation === ARITHMETIC_OPERATIONS.DIVISION) {
+            if(num2!=0){
+                resultInt =  Math.round((int1 / int2) * factor) / factor ;
+            }else{
+                resultInt=0
+            }
+        } else {
+            throw new Error('Unsupported operation');
+        }
+    
+        // Convert the result back to the original precision
+        // const result = resultInt / factor;
+        return resultInt;
+    }
+    function getProductInfoByBarcodeForMaterial() {
+        var barcode = $("#productIdBaracodeMaterial").val(),
+            type, salesId;
+            if (barcode != "") {
+                var URL= "/product/sales/barcode/json";
+                $.post(URL, {barcode: barcode}, function (data, status) {
+                    if (status == 'success') {
+                        if (data.status) {
+                             if(data.response==null){
+                                     toastr.error('ERROR',"this barcode is not available "+ barcode)
+                                 }else{
+                                    var dataList = data.response;
+                                    var onlyone = false; 
+                                    console.log("dataList.length ----->"+dataList.length);
+                                    if(dataList.length > 1){
+                                        if(MULTIBARCODE == 1 && MULTIDUPLICATEBARCODE == 1){
+                                            console.log("MULTIBARCODE && MULTIDUPLICATEBARCODE");
+                                            varientList = [];
+                                            varientList = dataList;
+                                            toastr.error("this barcode contains multiple product");
+                                            // setMultipleProductOnModal(dataList,0);
+                                            // $('#selectMultiProduct').attr('onclick',"selectMultiProductReturn()");
+                                            //  $('#multi_barcode_modal').modal('show');
+                                        }else {
+                                            if(dataList[0]!=null){
+                                                onlyone = true;
+                                            }
+                                            
+                                        }	
+                                    }else if (dataList.length == 1){
+                                        if(dataList[0]!=null){
+                                            onlyone = true;
+                                        }
+                                    }else{
+                                         showToast("This barcode is not available", barcode)
+                                    }
+                                    console.log("only one--->"+onlyone)
+                                    if(onlyone){
+                                        if(dataList[0].productVo.isExpiryManage==1){
+                                             var flag_for_expiry=0;
+                                                
+                                            if($("#consumptionType").val()=='Expired'){
+                                                 dataNew = [];
+                                                 for (var u = 0; u < dataList[0].stockMasterVos.length; u++) {
+                                                  var startDate = moment(moment(dataList[0].stockMasterVos[u].expirationDate).format('DD-MM-YYYY'), "DD-MM-YYYY");
+                                                    var endDate =moment(moment(SERVERDATE).format('DD/MM/YYYY'),"DD-MM-YYYY");
+                                                    if(endDate.diff(startDate, 'days')>=1){console.log("herree")
+                                                         dataNew.push(dataList[0].stockMasterVos[u]);
+                                                         flag_for_expiry=1;
+                                                    }
+                                                        
+                                                }
+                                                
+                                                if(flag_for_expiry==1){
+                                                  dataList[0].stockMasterVos = [];
+                                                    for (var k = 0; k < dataNew.length; k++) {
+                                                        dataList[0].stockMasterVos.push(dataNew[k]);
+                                                    }
+                                                }else{
+                                                    showToast("Expired batches are not available for this product")
+                                                        return false;
+                                                }
+                                                
+                                                if ( dataList[0].stockMasterVos == null ||  dataList[0].stockMasterVos.length <= 0) {
+                                                    if(flag_for_expiry==1){
+                                                        showToast("Expired batches are not available for this product")
+                                                        return false;
+                                                    }
+                                                }
+                                                
+                                                selectProductFromMultiBarcodeModalForMaterial(dataList,0);	
+                                            }else{
+                                                selectProductFromMultiBarcodeModalForMaterial(dataList,0);	
+                                            }
+                                        }else{
+                                            selectProductFromMultiBarcodeModalForMaterial(dataList,0);	
+                                        }
+                                        
+                                    }else{
+                                        
+                                    }
+                                }
+                        }else{
+                            toastr.error('ERROR',data.message)
+                        }
+                        
+                    }
+                });
+                }
+        return false;
+    }
+    function selectProductFromMultiBarcodeModalForMaterial(dataList,index) {
+    	var data = dataList[0];
+    	console.log("MULTIBARCODE NOT");
+    	console.log(data)
+    	if (data == "") {
+           showToast("This barcode is not available")
+        } else {
+                if (data.productVo.active == 1) {
+                    showToast("This product is Deactive");
+                    $("#productIdBaracodeMaterial").val("");
+                } else {
+                    if (checkBatchIsAvailable(data)) {
+                        setBatchOptionToSelectBoxForMaterial(data);
+                        if (checkItHasOneBatch(data)) {
+                           
+                            if($("#batchNoForMaterial").find('option:selected').attr("data-isexpirymanage")==1){
+                             var startDate = moment(moment($("#batchNo").find('option:selected').attr("data-expiry")).format('DD-MM-YYYY'), "DD-MM-YYYY");
+                             var endDate =moment(moment(SERVERDATE).format('DD/MM/YYYY'),"DD-MM-YYYY");
+                             if(endDate.diff(startDate, 'days')>=1){
+                                Swal.fire({
+                                    title: "Are you sure?",
+                                    text: "You want To Add expired product",
+                                    type: "warning",
+                                    showCancelButton: !0,
+                                    confirmButtonText: "Yes, Add it!"
+                                    }).then(function (e) {
+                                        if(e.value){
+                                            getLastSalesPriceAndSetProductForMaterial(data);
+                                        }else{
+                                            
+                                                $("#select_batch_modal_for_material").modal("hide");
+                                        }
+                                    });
+                             }else{
+                                getLastSalesPriceAndSetProductForMaterial(data);
+                             }
+                            }else{
+                                getLastSalesPriceAndSetProductForMaterial(data);
+                            }
+                                            
+                        } else {
+                            let promise = new Promise(function (resolve, reject) {
+                                $('#select_batch_modal_for_material').modal('show');
+                                $("#saveBatchForMaterial").click(function () {
+                                  
+                                    if($("#batchNoForMaterial").find('option:selected').attr("data-isexpirymanage")==1){
+                                     var startDate = moment(moment($("#batchNoForMaterial").find('option:selected').attr("data-expiry")).format('DD-MM-YYYY'), "DD-MM-YYYY");
+                                     var endDate =moment(moment(SERVERDATE).format('DD/MM/YYYY'),"DD-MM-YYYY");
+                                     if(endDate.diff(startDate, 'days')>=1){
+                                        Swal.fire({
+                                            title: "Are you sure?",
+                                            text: "You want To Add expired product",
+                                            type: "warning",
+                                            showCancelButton: !0,
+                                            confirmButtonText: "Yes, Add it!"
+                                            }).then(function (e) {
+                                                if(e.value){
+                                                      resolve();
+                                                        $("#select_batch_modal_for_material").modal("hide");
+                                                }else{
+                                                    
+                                                        $("#select_batch_modal_for_material").modal("hide");
+                                                }
+                                            });
+                                     }else{
+                                          resolve();
+                                            $("#select_batch_modal_for_material").modal("hide");
+                                     }
+                                    }else{
+                                          resolve();
+                                            $("#select_batch_modal_for_material").modal("hide");
+                                    }
+                                    
+                                });
+                                $("#cancelBatchForMaterial").click(function () {
+                                    reject();
+                                    $("#select_batch_modal_for_material").modal("hide");
+                                });
+                            });
+                            promise.then(function () {
+                                getLastSalesPriceAndSetProductForMaterial(data);
+                            });
+                        }
+                    }
+                }
+        }
+                    $("#productIdBaracodeMaterial").val("");
+                    $("#productIdBaracodeMaterial").focus();
+    	
+    }
 
 
