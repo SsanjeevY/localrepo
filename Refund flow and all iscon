@@ -1,0 +1,73 @@
+@PostMapping("/refundbills/send-otp")
+	public ResponseEntity<ApiResponse> sendrefundbillsotp(HttpSession session) {
+
+		long userId = Long.parseLong(session.getAttribute("userId").toString());
+
+		Map<String, Object> mobMap = userFrontService.findCountryDialCodeAndParentMobileNumberByIsDeleted(userId, 0);
+		if (mobMap.get("mobileNo") != null && StringUtils.isNotBlank(mobMap.get("mobileNo").toString())) {
+			String mobileNumber = mobMap.get("mobileNo").toString();
+			Random random = new Random();
+			String otp = "";
+			int isotpSend = 0;
+			try {
+
+				try {
+					String senderId = "VSYERP";
+
+					otp = String.format("%06d", random.nextInt(1000000));
+					session.setAttribute("refundBillsOtp", otp);
+
+					String sms = "Your OTP is " + otp + "\r\n"
+							+ "system developed by vasyerp.com";
+					try {
+						Msg91.sendOtpWithCountryCode(mobileNumber, sms, SMSCONSTANT.OTP, senderId,
+								String.valueOf((int) mobMap.get("countryDialCodePrefix")));
+
+						isotpSend = 1;
+
+						if (isotpSend == 1) {
+							otpLimitService.deleteByMobileNoAndType(mobileNumber,
+									Constant.OTP_SEND_LIMIT_CASH_CONTROL_OPENING_BALANCE);
+						}
+
+						return ResponseEntity.ok(new ApiResponse(true, "OTP Sent Successfully", null));
+					} catch (Exception e) {
+						e.printStackTrace();
+						return ResponseEntity.ok(new ApiResponse(false, "Something went wrong", null));
+					}
+
+				} catch (Exception e) {
+					e.printStackTrace();
+					return ResponseEntity.ok(new ApiResponse(false, "Something went wrong", null));
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				return ResponseEntity.ok(new ApiResponse(false, "OTP Not Sent", null));
+			}
+		} else {
+			return ResponseEntity.ok(new ApiResponse(false, "Mobile Number Not Valid Or Blank", null));
+		}
+	}
+	
+	@PostMapping("/refundbills/verify-otp")
+	public ResponseEntity<ApiResponse> verifyRefundBillsOtp(@RequestParam(value = "otp") String otp,
+			HttpSession session) {
+
+		String refundBillsOtp = session.getAttribute("refundBillsOtp").toString();
+
+		if (StringUtils.isNotBlank(otp)) {
+
+			if ((StringUtils.isNotBlank(refundBillsOtp)) && (StringUtils.equals(refundBillsOtp, otp))) {
+
+				
+					session.removeAttribute("refundBillsOtp");
+					return ResponseEntity.ok(new ApiResponse(true, "Verified Successfully", null));
+
+			} else {
+				return ResponseEntity.ok(new ApiResponse(false, "Please enter valid OTP", null));
+			}
+		} else {
+			return ResponseEntity.ok(new ApiResponse(false, "OTP Not Found", null));
+		}
+	}
